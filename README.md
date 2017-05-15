@@ -42,11 +42,14 @@ resultado = Authentication (base_url ,user, password)
  
  
 MESSAGEBOX(resultado)
+
 ```
 **Timbrar V1**
+
 <p align="center">
     <img src="http://developers.sw.com.mx/wp-content/uploads/2017/05/foxpro-three.png">
 </p>
+
 ```visual foxpro
 declare string Stamp in sw-sdk-cpp.dll string url, string _user, string pwd, string xml
  
