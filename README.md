@@ -20,10 +20,14 @@ Pasos Previos
 Implementaci&oacute;n
 ---------
 **Obtener Token**
+
 <p align="center">
     <img src="http://developers.sw.com.mx/wp-content/uploads/2017/05/foxpro-one.png">
 </p>
-```visual foxpro
+
+
+
+```vb
 
 *Para utilizar los servicios de SW con Visual Foxpro se debe tener primeramente el fichero DLL *correspondiente a "sw-sdk-cpp.dll"
 *Este se puede encontrar en el repositorio de github correspondiente al proyecto "sw-sdk-cpp"
@@ -44,13 +48,14 @@ resultado = Authentication (base_url ,user, password)
 MESSAGEBOX(resultado)
 
 ```
+
 **Timbrar V1**
 
 <p align="center">
     <img src="http://developers.sw.com.mx/wp-content/uploads/2017/05/foxpro-three.png">
 </p>
 
-```visual foxpro
+```vb
 declare string Stamp in sw-sdk-cpp.dll string url, string _user, string pwd, string xml
  
 url = thisform.auth.stamp.base_txt.Value
@@ -70,6 +75,3 @@ resultado = Stamp (url,user_s, pwd_s,xml)
 MESSAGEBOX(resultado)
 
 ```
-
-
- 
