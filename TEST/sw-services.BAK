@@ -1,17 +1,47 @@
-SET PROCEDURE to json.prg additive
 LOCAL oErr as EXCEPTION
 
-&& Autenticación
-FUNCTION Auth()
-	*/ Editables /*
+&& Status SAT
+Function EstatusCFDI(cURL,cRfcEmisor, cRfcReceptor, cTotal, cUUID)
+
+	sRequest = '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:tem="http://tempuri.org/">' + ;
+'<soapenv:Header/>' + ;
+'<soapenv:Body>' + ;
+'<tem:Consulta>' + ;
+'<tem:expresionImpresa><![CDATA[?re='+cRfcEmisor+'&rr='+cRfcReceptor+'&tt='+cTotal+'&id='+cUUID+']]></tem:expresionImpresa>' +;
+'</tem:Consulta>' + ;
+'</soapenv:Body>' + ;
+'</soapenv:Envelope>'
+	sURL = cURL+'?wsdl'
+	Try
+		oHTTP = Createobject("Microsoft.XMLHTTP")
+
+		With oHTTP
+			.Open ("POST", sURL, .F.)
+			.setRequestHeader('SOAPAction', 'http://tempuri.org/IConsultaCFDIService/Consulta')
+			.setRequestHeader('Content-Type', 'text/xml;charset="utf-8"')
+			.Send (sRequest)
+		Endwith
+		_Estatus = oHTTP.responseText
+
+	Catch To oErr
+
+		_Estatus = "Error, sucedio un problema en la funci?n e" + sp + sp + ;
+			"[  Error: ] " + Str(oErr.ErrorNo) + sp + ;
+			"[  LineNo: ] " + Str(oErr.Lineno) + sp + ;
+			"[  Message: ] " + oErr.Message + sp + ;
+			"[  Procedure: ] " + oErr.Procedure + sp + ;
+			"[  Details: ] " + oErr.Details + sp + ;
+			"[  StackLevel: ] " + Str(oErr.StackLevel) + sp + ;
+			"[  LineContents: ] " + oErr.LineContents
+
+	Endtry
+
+	Return _Estatus
+
+&& Authentication
+FUNCTION Authentication(cURL, cUser, cPassword)
+
 	cService = '/security/authenticate'
-	cUser = 'demo'
-	cPassword = '123456789'
-	cURL= 'http://services.test.sw.com.mx'
-
-
-
-	*/ No Editables /*
 	cURL = cURL +cService
 	sp = CHR(13)+CHR(10)
 
@@ -25,9 +55,7 @@ FUNCTION Auth()
 		ENDWITH
 
 		oHTTP.Send()
-		Token =  json_decode (oHTTP.responseText)
-		dataValue = Token.get ('data')
-		_token = dataValue.get ('token')
+		_token =  oHTTP.responseText
   CATCH TO oErr
 	   
 		  _token= "Error, sucedio un problema en la función Token" + sp + sp + ;
@@ -43,24 +71,27 @@ FUNCTION Auth()
 	
 RETURN _token
 
+FUNCTION GetTokenValue(response)
+  jsonResponse = json_decode(response)
+  dataValue = jsonResponse.get ('data')
+  tokenValue = dataValue.get ('token')
+RETURN tokenValue
+
 
 &&Timbrado
-FUNCTION Stamp(cVersion, cToken, cXML, cURL)
+FUNCTION Stamp(cURL, cToken, cXML, cVersion)
 
-	*/ Editables /*
 	StampVersion = LOWER(cVersion)
 	xml =  cXML
 	cService = '/cfdi33/stamp/'
 	
-	
-	*/ No Editables /*
 	sp = CHR(13)+CHR(10)
 	_bound = "AaB03x"
-    sUrl = cURL + cService + cVersion
+    sUrl = cURL + cService + cVersion 
     body = '--' + _bound + sp + 'Content-Disposition: form-data; name=xml; filename=xml' + sp + 'Content-Transfer-Encoding: binary'+ sp+sp+xml+sp +'--'+ _bound + '--' + sp
     
   	TRY  
-		oHTTP = CreateObject("MSXML2.XMLHTTP.3.0")
+		oHTTP = CreateObject("MSXML2.XMLHTTP")
 		
 		WITH oHTTP
 			 .open ("POST", sUrl, .F.)
@@ -74,7 +105,7 @@ FUNCTION Stamp(cVersion, cToken, cXML, cURL)
 	
   	CATCH TO oErr
 	   
-		  StampV= "Error, sucedio un problema en la función Stamp" + sp + sp + ;
+		 StampV = "Error, sucedio un problema en la función Stamp" + sp + sp + ;
 				  "[  Error: ] " + STR(oErr.ErrorNo) + sp + ;
 	    		  "[  LineNo: ] " + STR(oErr.LineNo) + sp + ; 
 	    		  "[  Message: ] " + oErr.Message + sp + ; 
@@ -87,24 +118,66 @@ FUNCTION Stamp(cVersion, cToken, cXML, cURL)
 	
 RETURN StampV
 
+&&TimbradoRetencion
+FUNCTION StampRet(cURL, cToken, cXML)
+	xml =  cXML
+    sUrl = cURL
+    sp = CHR(13)+CHR(10)
+    body = '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:tem="http://tempuri.org/"><soapenv:Header/><soapenv:Body><tem:TimbrarRetencionXMLV2><tem:xmlRetencion><![CDATA[' + xml + ']]></tem:xmlRetencion><tem:tokenAutenticacion>' + cToken + '</tem:tokenAutenticacion></tem:TimbrarRetencionXMLV2></soapenv:Body></soapenv:Envelope>'
+  	TRY  
+		oHTTP = CreateObject("MSXML2.XMLHTTP")
+		
+		WITH oHTTP
+			 .open ("POST", sUrl, .F.)
+			 .setRequestHeader ('SOAPAction', 'http://tempuri.org/IwcfTimbradoRetenciones/TimbrarRetencionXMLV2')
+			 .setRequestHeader ('Content-Type', 'text/xml;charset="utf-8"')
+			 .setRequestHeader ('Content-Length', Len(body))
+			 .send (body)
+		ENDWITH
+		response = oHTTP.responseText
+		MESSAGEBOX(response)
+		oXML = CREATEOBJECT('Msxml2.DOMDocument.6.0')
+		oXML.ASYNC = .F.
+		oXML.LOADXML(response)
+		IF oHTTP.status != 200 THEN
+		 oNode = oXML.SelectSingleNode("//faultstring")
+		 StampRet = oNode.text
+		ELSE
+ 		 oXML.setProperty("SelectionNamespaces", "xmlns:res='http://tempuri.org/'")	 
+         oNode = oXML.SelectSingleNode("//res:TimbrarRetencionXMLV2Result")
+		 StampRet = oNode.text
+		ENDIF
+	 
+  	CATCH TO oErr
+	   
+		 StampRet = "Error, sucedio un problema en la función Stamp" + sp + sp + ;
+				  "[  Error: ] " + STR(oErr.ErrorNo) + sp + ;
+	    		  "[  LineNo: ] " + STR(oErr.LineNo) + sp + ; 
+	    		  "[  Message: ] " + oErr.Message + sp + ; 
+	    		  "[  Procedure: ] " + oErr.Procedure + sp + ; 
+	    		  "[  Details: ] " + oErr.Details + sp + ; 
+	    		  "[  StackLevel: ] " + STR(oErr.StackLevel) + sp + ; 
+	    		  "[  LineContents: ] " + oErr.LineContents
 
+  	ENDTRY	
+	
+RETURN StampRet
 
-&&Cancelacion
-FUNCTION Cancelation(cURL, cUUID, cRFC, cPassword, cCer, cKey, cVersion, cToken, cCancelationBy)
+&&CancelationByCSD
+FUNCTION CancelationByCSD(cURL, cToken, cUUID, cCer, cKey, cRFC, cPassword)
 
-
-	sVersion = '/cfdi'+cVersion+'/cancel/'+LOWER(cCancelationBy)
+	sVersion = '/cfdi33/cancel/csd/'
 	sURL = cURL + sVersion
 	sp = CHR(13)+CHR(10)
 	   
 	body = ''
 	
 		body = 		'{'
-    	body = body + 	'"uuid": "06a46e4b-b154-4c12-bb77-f9a63ed55ff2", ' 
-		body = body + 	' "password": "12345678a", ' 
- 		body = body + 	'"rfc": "LAN7008173R5", ' 
- 		body = body + 	'"b64Cer": "' + cCer+'", ' 
- 		body = body + 	'"b64Key": "' + cKey+'"' 
+    	body = body + 	'"uuid": "' + cUUID + '", ' 
+		body = body + 	'"password": "' + cPassword + '", ' 
+ 		body = body + 	'"rfc": "' + cRFC + '", ' 
+ 		body = body + 	'"b64Cer": "' + cCer + '", ' 
+ 		body = body + 	'"b64Key": "' + cKey + '"' 
  		body = body + '}'   
 	 
 	TRY 
@@ -120,7 +193,7 @@ FUNCTION Cancelation(cURL, cUUID, cRFC, cPassword, cCer, cKey, cVersion, cToken,
 	 
 	 CATCH TO oErr
 	   
-	   _Cancelation = "Error, sucedio un problema en la función Cancelation" + sp + sp + ;
+	   _Cancelation = "Error, sucedio un problema en la función CancelationByCSD" + sp + sp + ;
 					  "[  Error: ] " + STR(oErr.ErrorNo) + sp + ;
 		    		  "[  LineNo: ] " + STR(oErr.LineNo) + sp + ; 
 		    		  "[  Message: ] " + oErr.Message + sp + ; 
@@ -135,10 +208,127 @@ RETURN _Cancelation
 
 
 
+&&CancelationByXML
+FUNCTION CancelationByXML(cURL, cToken, cXML)
+
+	sVersion = '/cfdi33/cancel/xml'
+	sURL = cURL + sVersion
+	sp = CHR(13)+CHR(10)
+	BOUNDARY = '----WebKitFormBoundary7MA4YWxkTrZu0gW'   
+	   
+	body = ''
+	
+		body =  sp+sp+'--' + BOUNDARY + sp
+		body = body + 'Content-Disposition: form-data; name="xml"; filename=""' + sp
+		body = body + 'Content-Type:' + sp + sp
+		body = body + cXML + sp
+		body = body + '--' + BOUNDARY + '--'   
+	 
+	TRY 
+	 	oHTTP = CreateObject("Microsoft.XMLHTTP")   
+	 
+		WITH oHTTP
+		 	.open ("POST", sUrl, .F.) 
+		 	.setRequestHeader ('Authorization', 'bearer '+ cToken) 
+			.setRequestHeader ('Content-Type',  'multipart/form-data; boundary=' + BOUNDARY) 
+			.send (body)
+		ENDWITH
+		_Cancelation = oHTTP.responseText 
+	 
+	 CATCH TO oErr
+	   
+	   _Cancelation = "Error, sucedio un problema en la función CancelationByXML" + sp + sp + ;
+					  "[  Error: ] " + STR(oErr.ErrorNo) + sp + ;
+		    		  "[  LineNo: ] " + STR(oErr.LineNo) + sp + ; 
+		    		  "[  Message: ] " + oErr.Message + sp + ; 
+		    		  "[  Procedure: ] " + oErr.Procedure + sp + ; 
+		    		  "[  Details: ] " + oErr.Details + sp + ; 
+		    		  "[  StackLevel: ] " + STR(oErr.StackLevel) + sp + ; 
+		    		  "[  LineContents: ] " + oErr.LineContents
+
+	ENDTRY
+	
+RETURN _Cancelation
+
+&&CancelationByPFX
+FUNCTION CancelationByPFX(cURL, cToken, cUUID, cRFC, cPassword, cPFX)
+
+	sVersion = '/cfdi33/cancel/pfx'
+	sURL = cURL + sVersion
+	sp = CHR(13)+CHR(10)
+	     
+	body = ''
+	
+		body = 		'{'
+    	body = body + 	'"uuid": "' + cUUID + '", ' 
+		body = body + 	'"password": "' + cPassword + '", ' 
+ 		body = body + 	'"rfc": "' + cRFC + '", ' 
+ 		body = body + 	'"b64Pfx": "' + cPFX + '"' 
+ 		body = body + '}'   
+	 
+	TRY 
+	 	oHTTP = CreateObject("Microsoft.XMLHTTP")   
+	 
+		WITH oHTTP
+		 	.open ("POST", sUrl, .F.) 
+		 	.setRequestHeader ('Authorization', 'bearer '+ cToken) 
+			.setRequestHeader ('Content-Type',  'application/json') 
+			.send (body)
+		ENDWITH
+		_Cancelation = oHTTP.responseText 
+	 
+	 CATCH TO oErr
+	   
+	   _Cancelation = "Error, sucedio un problema en la función CancelationByPFX" + sp + sp + ;
+					  "[  Error: ] " + STR(oErr.ErrorNo) + sp + ;
+		    		  "[  LineNo: ] " + STR(oErr.LineNo) + sp + ; 
+		    		  "[  Message: ] " + oErr.Message + sp + ; 
+		    		  "[  Procedure: ] " + oErr.Procedure + sp + ; 
+		    		  "[  Details: ] " + oErr.Details + sp + ; 
+		    		  "[  StackLevel: ] " + STR(oErr.StackLevel) + sp + ; 
+		    		  "[  LineContents: ] " + oErr.LineContents
+
+	ENDTRY
+	
+RETURN _Cancelation
+
+
+&&CancelationByUUID
+FUNCTION CancelationByUUID(cToken, cURL, cUUID, cRFC)
+
+	sVersion = '/cfdi33/cancel/' + cRFC + '/' + cUUID + '/'
+	sURL = cURL + sVersion
+	sp = CHR(13)+CHR(10)
+	
+	TRY 
+	 	oHTTP = CreateObject("Microsoft.XMLHTTP")   
+	 
+		WITH oHTTP
+		 	.open ("POST", sURL, .F.) 
+			.setRequestHeader('Authorization', 'bearer '+ cToken)
+			.setRequestHeader('Content-Type', 'application/json')
+			.send ()
+		ENDWITH
+		_Cancelation = oHTTP.responseText 
+	 
+	 CATCH TO oErr
+	   
+	   _Cancelation = "Error, sucedio un problema en la función CancelationByUUID" + sp + sp + ;
+					  "[  Error: ] " + STR(oErr.ErrorNo) + sp + ;
+		    		  "[  LineNo: ] " + STR(oErr.LineNo) + sp + ; 
+		    		  "[  Message: ] " + oErr.Message + sp + ; 
+		    		  "[  Procedure: ] " + oErr.Procedure + sp + ; 
+		    		  "[  Details: ] " + oErr.Details + sp + ; 
+		    		  "[  StackLevel: ] " + STR(oErr.StackLevel) + sp + ; 
+		    		  "[  LineContents: ] " + oErr.LineContents &&+ sVersion 
+
+	ENDTRY
+	
+RETURN _Cancelation
+
 
 && Estado de Cuenta
-FUNCTION AccountBalance(cToken, cURL)
-
+FUNCTION AccountBalance(cURL, cToken)
 
 	sVersion = '/account/balance'
 	sURL = cURL + sVersion	
@@ -170,6 +360,160 @@ FUNCTION AccountBalance(cToken, cURL)
 
 RETURN _AccountBalance
 
+&&Emisión-Timbrado
+FUNCTION Issue(cURL, cToken, cXML, cVersion)
+
+	StampVersion = LOWER(cVersion)
+	xml =  cXML
+	cService = '/cfdi33/issue/'
+	
+	sp = CHR(13)+CHR(10)
+	_bound = "AaB03x"
+    sUrl = cURL + cService + cVersion 
+    body = '--' + _bound + sp + 'Content-Disposition: form-data; name=xml; filename=xml' + sp + 'Content-Transfer-Encoding: binary'+ sp+sp+xml+sp +'--'+ _bound + '--' + sp
+    
+  	TRY  
+		oHTTP = CreateObject("MSXML2.XMLHTTP")
+		
+		WITH oHTTP
+			 .open ("POST", sUrl, .F.)
+			 .setRequestHeader ('Authorization', 'bearer '+ cToken)
+			 .setRequestHeader ('Content-Type', 'multipart/form-data; boundary=' + _bound)
+			 .setRequestHeader ('Content-Length', Len(body))
+			 .send (body)
+		ENDWITH
+
+		_Issue = oHTTP.responseText
+		
+  	CATCH TO oErr
+	   
+		 _Issue= "Error, sucedio un problema en la función Issue" + sp + sp + ;
+				  "[  Error: ] " + STR(oErr.ErrorNo) + sp + ;
+	    		  "[  LineNo: ] " + STR(oErr.LineNo) + sp + ; 
+	    		  "[  Message: ] " + oErr.Message + sp + ; 
+	    		  "[  Procedure: ] " + oErr.Procedure + sp + ; 
+	    		  "[  Details: ] " + oErr.Details + sp + ; 
+	    		  "[  StackLevel: ] " + STR(oErr.StackLevel) + sp + ; 
+	    		  "[  LineContents: ] " + oErr.LineContents
+
+  	ENDTRY	
+	
+RETURN _Issue
+
+&&Validación de XML
+FUNCTION ValidateXML(cURL, cToken, cXML)
+
+	xml =  cXML
+	cService = '/validate/cfdi33/'
+	
+	sp = CHR(13)+CHR(10)
+	_bound = "AaB03x"
+    sUrl = cURL + cService 
+    body = '--' + _bound + sp + 'Content-Disposition: form-data; name=xml; filename=xml' + sp + 'Content-Transfer-Encoding: binary'+ sp+sp+xml+sp +'--'+ _bound + '--' + sp
+    
+  	TRY  
+		oHTTP = CreateObject("MSXML2.XMLHTTP")
+		
+		WITH oHTTP
+			 .open ("POST", sUrl, .F.)
+			 .setRequestHeader ('Authorization', 'bearer '+ cToken)
+			 .setRequestHeader ('Content-Type', 'multipart/form-data; boundary=' + _bound)
+			 .setRequestHeader ('Content-Length', Len(body))
+			 .send (body)
+		ENDWITH
+		
+		_Validate = oHTTP.responseText
+	
+  	CATCH TO oErr
+	   
+		_Validate = "Error, sucedio un problema en la función ValidateXML" + sp + sp + ;
+				  "[  Error: ] " + STR(oErr.ErrorNo) + sp + ;
+	    		  "[  LineNo: ] " + STR(oErr.LineNo) + sp + ; 
+	    		  "[  Message: ] " + oErr.Message + sp + ; 
+	    		  "[  Procedure: ] " + oErr.Procedure + sp + ; 
+	    		  "[  Details: ] " + oErr.Details + sp + ; 
+	    		  "[  StackLevel: ] " + STR(oErr.StackLevel) + sp + ; 
+	    		  "[  LineContents: ] " + oErr.LineContents
+
+  	ENDTRY	
+	
+RETURN _Validate 
+
+
+&&Busqueda por LRFC
+FUNCTION SearchByLRFC(cURL, cToken, cRFC)
+
+	cService = '/lrfc/'+cRFC
+	
+	sp = CHR(13)+CHR(10)
+    sUrl = cURL + cService 
+     
+  	TRY  
+		oHTTP = CreateObject("MSXML2.XMLHTTP")
+		
+		WITH oHTTP
+			 .open ("GET", sUrl, .F.)
+			 .setRequestHeader ('Authorization', 'bearer '+ cToken)
+			 .setRequestHeader ('Content-Type', 'application/json')
+			 .send ()
+		ENDWITH
+		
+		_LRFC = oHTTP.responseText
+	
+  	CATCH TO oErr
+	   
+		   _LRFC= "Error, sucedio un problema en la función ValidateXML" + sp + sp + ;
+				  "[  Error: ] " + STR(oErr.ErrorNo) + sp + ;
+	    		  "[  LineNo: ] " + STR(oErr.LineNo) + sp + ; 
+	    		  "[  Message: ] " + oErr.Message + sp + ; 
+	    		  "[  Procedure: ] " + oErr.Procedure + sp + ; 
+	    		  "[  Details: ] " + oErr.Details + sp + ; 
+	    		  "[  StackLevel: ] " + STR(oErr.StackLevel) + sp + ; 
+	    		  "[  LineContents: ] " + oErr.LineContents
+
+  	ENDTRY	
+	
+RETURN _LRFC
+
+&&Busqueda por NoCertificado
+FUNCTION SearchByNoCert(cURL, cToken, cCert)
+
+	cService = '/lco/'+cCert
+	
+	sp = CHR(13)+CHR(10)
+    sUrl = cURL + cService 
+     
+  	TRY  
+		oHTTP = CreateObject("MSXML2.XMLHTTP")
+		
+		WITH oHTTP
+			 .open ("GET", sUrl, .F.)
+			 .setRequestHeader ('Authorization', 'bearer '+ cToken)
+			 .setRequestHeader ('Content-Type', 'application/json')
+			 .send ()
+		ENDWITH
+		
+		_Certificate = oHTTP.responseText
+	
+  	CATCH TO oErr
+	   
+		_Certificate = "Error, sucedio un problema en la función ValidateXML" + sp + sp + ;
+				  "[  Error: ] " + STR(oErr.ErrorNo) + sp + ;
+	    		  "[  LineNo: ] " + STR(oErr.LineNo) + sp + ; 
+	    		  "[  Message: ] " + oErr.Message + sp + ; 
+	    		  "[  Procedure: ] " + oErr.Procedure + sp + ; 
+	    		  "[  Details: ] " + oErr.Details + sp + ; 
+	    		  "[  StackLevel: ] " + STR(oErr.StackLevel) + sp + ; 
+	    		  "[  LineContents: ] " + oErr.LineContents
+
+  	ENDTRY	
+	
+RETURN _Certificate 
+************************************************************************************************
+*																							   *
+*			JSON Library																	   *
+*																							   *
+************************************************************************************************
 
 lRunTest = .t.
 if lRunTest
@@ -200,9 +544,6 @@ return retval
 
 function json_getErrorMsg()
 return _json.cError
-	
-
-
 
 
 *
