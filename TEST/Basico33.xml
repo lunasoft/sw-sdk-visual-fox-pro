@@ -1,0 +1,1 @@
+{"message":"401 - El rango de la fecha de generación no debe de ser mayor a 72 horas para la emisión del timbre.","messageDetail":"Comprobante.Fecha: Fecha de emisión: 2017-10-11T16:25:51 Fecha del Servidor: 2019-06-28T16:10:58 La fecha de emision  no se encuentra en el rango permitido:  2019-06-25T16:10:58 - 2019-06-28T17:15:58","data":null,"status":"error"}
