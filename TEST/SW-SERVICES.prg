@@ -176,7 +176,7 @@ FUNCTION StampRet(cURL, cToken, cXML)
 RETURN StampRet
 
 &&CancelationByCSD
-FUNCTION CancelationByCSD(cURL, cToken, cUUID, cCer, cKey, cRFC, cPassword)
+FUNCTION CancelationByCSD(cURL, cToken, cUUID, cCer, cKey, cRFC, cPassword, motivo, fosustitucion)
 
 	sVersion = '/cfdi33/cancel/csd/'
 	sURL = cURL + sVersion
@@ -187,7 +187,9 @@ FUNCTION CancelationByCSD(cURL, cToken, cUUID, cCer, cKey, cRFC, cPassword)
 		body = 		'{'
     	body = body + 	'"uuid": "' + cUUID + '", ' 
 		body = body + 	'"password": "' + cPassword + '", ' 
- 		body = body + 	'"rfc": "' + cRFC + '", ' 
+ 		body = body + 	'"rfc": "' + cRFC + '", '
+ 		body = body + 	'"motivo": "' + motivo + '", ' 
+ 		body = body + 	'"foliosustitucion": "' + fosustitucion + '", '  
  		body = body + 	'"b64Cer": "' + cCer + '", ' 
  		body = body + 	'"b64Key": "' + cKey + '"' 
  		body = body + '}'   
@@ -263,7 +265,7 @@ FUNCTION CancelationByXML(cURL, cToken, cXML)
 RETURN _Cancelation
 
 &&CancelationByPFX
-FUNCTION CancelationByPFX(cURL, cToken, cUUID, cRFC, cPassword, cPFX)
+FUNCTION CancelationByPFX(cURL, cToken, cUUID, cPFX, cRFC, cPassword, motivo, fosustitucion)
 
 	sVersion = '/cfdi33/cancel/pfx'
 	sURL = cURL + sVersion
@@ -274,7 +276,9 @@ FUNCTION CancelationByPFX(cURL, cToken, cUUID, cRFC, cPassword, cPFX)
 		body = 		'{'
     	body = body + 	'"uuid": "' + cUUID + '", ' 
 		body = body + 	'"password": "' + cPassword + '", ' 
- 		body = body + 	'"rfc": "' + cRFC + '", ' 
+ 		body = body + 	'"rfc": "' + cRFC + '", '
+ 		body = body + 	'"motivo": "' + motivo + '", ' 
+ 		body = body + 	'"foliosustitucion": "' + fosustitucion + '", '  
  		body = body + 	'"b64Pfx": "' + cPFX + '"' 
  		body = body + '}'   
 	 

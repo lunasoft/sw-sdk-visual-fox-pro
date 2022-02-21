@@ -420,7 +420,7 @@ RETURN _Issue
 FUNCTION ValidateXML(cURL, cToken, cXML)
 
 	xml =  cXML
-	cService = '/validate/cfdi/'
+	cService = '/validate/cfdi33/'
 	
 	sp = CHR(13)+CHR(10)
 	_bound = "AaB03x"
