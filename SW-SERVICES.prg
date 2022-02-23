@@ -1,13 +1,13 @@
 LOCAL oErr as EXCEPTION
 
 && Status SAT
-Function EstatusCFDI(cURL,cRfcEmisor, cRfcReceptor, cTotal, cUUID, c8Fe)
+Function EstatusCFDI(cURL,cRfcEmisor, cRfcReceptor, cTotal, cUUID, cSello)
 
 	sRequest = '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:tem="http://tempuri.org/">' + ;
 '<soapenv:Header/>' + ;
 '<soapenv:Body>' + ;
 '<tem:Consulta>' + ;
-'<tem:expresionImpresa><![CDATA[?re='+cRfcEmisor+'&rr='+cRfcReceptor+'&tt='+cTotal+'&id='+cUUID+'&fe='+c8Fe+']]></tem:expresionImpresa>' +;
+'<tem:expresionImpresa><![CDATA[?re='+cRfcEmisor+'&rr='+cRfcReceptor+'&tt='+cTotal+'&id='+cUUID+'&fe='+cSello+']]></tem:expresionImpresa>' +;
 '</tem:Consulta>' + ;
 '</soapenv:Body>' + ;
 '</soapenv:Envelope>'
@@ -176,7 +176,7 @@ FUNCTION StampRet(cURL, cToken, cXML)
 RETURN StampRet
 
 &&CancelationByCSD
-FUNCTION CancelationByCSD(cURL, cToken, cUUID, cCer, cKey, cRFC, cPassword, motivo, fosustitucion)
+FUNCTION CancelationByCSD(cURL, cToken, cUUID, cCer, cKey, cRFC, cPassword, cMotivo, cFosustitucion)
 
 	sVersion = '/cfdi33/cancel/csd/'
 	sURL = cURL + sVersion
@@ -188,8 +188,8 @@ FUNCTION CancelationByCSD(cURL, cToken, cUUID, cCer, cKey, cRFC, cPassword, moti
     	body = body + 	'"uuid": "' + cUUID + '", ' 
 		body = body + 	'"password": "' + cPassword + '", ' 
  		body = body + 	'"rfc": "' + cRFC + '", '
- 		body = body + 	'"motivo": "' + motivo + '", ' 
- 		body = body + 	'"foliosustitucion": "' + fosustitucion + '", '  
+ 		body = body + 	'"motivo": "' + cMotivo + '", ' 
+ 		body = body + 	'"foliosustitucion": "' + cFosustitucion + '", '  
  		body = body + 	'"b64Cer": "' + cCer + '", ' 
  		body = body + 	'"b64Key": "' + cKey + '"' 
  		body = body + '}'   
@@ -265,7 +265,7 @@ FUNCTION CancelationByXML(cURL, cToken, cXML)
 RETURN _Cancelation
 
 &&CancelationByPFX
-FUNCTION CancelationByPFX(cURL, cToken, cUUID, cPFX, cRFC, cPassword, motivo, fosustitucion)
+FUNCTION CancelationByPFX(cURL, cToken, cUUID, cPFX, cRFC, cPassword, cMotivo, cFosustitucion)
 
 	sVersion = '/cfdi33/cancel/pfx'
 	sURL = cURL + sVersion
@@ -277,8 +277,8 @@ FUNCTION CancelationByPFX(cURL, cToken, cUUID, cPFX, cRFC, cPassword, motivo, fo
     	body = body + 	'"uuid": "' + cUUID + '", ' 
 		body = body + 	'"password": "' + cPassword + '", ' 
  		body = body + 	'"rfc": "' + cRFC + '", '
- 		body = body + 	'"motivo": "' + motivo + '", ' 
- 		body = body + 	'"foliosustitucion": "' + fosustitucion + '", '  
+ 		body = body + 	'"motivo": "' + cMotivo + '", ' 
+ 		body = body + 	'"foliosustitucion": "' + cFosustitucion + '", '  
  		body = body + 	'"b64Pfx": "' + cPFX + '"' 
  		body = body + '}'   
 	 
@@ -310,9 +310,9 @@ RETURN _Cancelation
 
 
 &&CancelationByUUID
-FUNCTION CancelationByUUID(cToken, cURL, cUUID, cRFC, cMotivo3, cFsust3)
+FUNCTION CancelationByUUID(cToken, cURL, cUUID, cRFC, cMotivo, cFosustitucion)
 
-	sVersion = '/cfdi33/cancel/' + cRFC + '/' + cUUID + '/' + '/' + cMotivo3 + '/' + cFsust3
+	sVersion = '/cfdi33/cancel/' + cRFC + '/' + cUUID + '/' + '/' + cMotivo + '/' + cFosustitucion
 	sURL = cURL + sVersion
 	sp = CHR(13)+CHR(10)
 	
