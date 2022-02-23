@@ -73,8 +73,6 @@ Como su nombre lo indica, este método recibe todos los elementos que componen e
 - Password del archivo key
 - UUID
 - RFC emisor
-- Motivo
-- Foliosustituci�n
 
 **Ejemplo de uso**
 
@@ -89,9 +87,7 @@ cKey = STRCONV(FILETOSTR(GETFILE('key')), 13)
 cPasswordCsd = '12345678a'
 cUUID = '5d42df44-0b9f-4bb6-8bf0-3622cb3b2543'
 cRFC = 'LAN8507268IA'
-cMotivo = '02'
-cFosustitucion = ' '
-cResponse= CancelationByCSD(cURL, cToken, cUUID, cCer, cKey, cRFC, cPasswordCsd, cMotivo, cFosustitucion)
+cResponse= CancelationByCSD(cURL, cToken, cUUID, cCer, cKey, cRFC, cPasswordCsd)
 ? cResponse
 MESSAGEBOX(cResponse)
 ```
@@ -104,8 +100,6 @@ Necesario:
 - Password del archivo PFX
 - UUID
 - RFC emisor
-- Motivo
-- Foliosustituci�n
 
 **Ejemplo de uso**
 
@@ -119,9 +113,7 @@ cPfx = STRCONV(FILETOSTR(GETFILE('pfx')), 13)
 cPasswordCsd = '12345678a'
 cUUID = '5d42df44-0b9f-4bb6-8bf0-3622cb3b2543'
 cRFC = 'LAN8507268IA'
-cMotivo = '01'
-cFosustitucion = '0e6eba79-b61c-42f1-8935-471909450b9a'
-cResponse= CancelationByPFX(cURL, cToken, cUUID, cPfx, cRFC, cPassword, cMotivo, cFosustitucion)
+cResponse= CancelationByPFX(cURL, cToken, cUUID, cPfx, cRFC, cPassword)
 ? cResponse
 MESSAGEBOX(cResponse)
 ```
@@ -152,8 +144,6 @@ Como su nombre lo indica, este método solo recibe un UUID y Rfc Emisor, pero se
 Necesario:
 -   UUID
 -   RFC emisor
-- Motivo
-- Foliosustituci�n
 
 **Ejemplo de uso**
 
@@ -167,9 +157,7 @@ cPfx = STRCONV(FILETOSTR(GETFILE('pfx')), 13)
 cPasswordCsd = '12345678a'
 cUUID = '5d42df44-0b9f-4bb6-8bf0-3622cb3b2543'
 cRFC = 'LAN8507268IA'
-cMotivo = '02'
-cFosustitucion = ' '
-cResponse= CancelationByPFX(cURL, cToken, cUUID, cPfx, cRFC, cPassword, Motivo, cFosustitucion)
+cResponse= CancelationByPFX(cURL, cToken, cUUID, cPfx, cRFC, cPassword)
 ? cResponse
 MESSAGEBOX(cResponse)
 ```
@@ -203,6 +191,37 @@ Respuesta = ValidateXML(cURL, cToken, cXML)
 MESSAGEBOX(Respuesta)
 ```
 
+## Validacion LRFC
+Este servicio verifica que el RFC proporcionado se encuentre en la lista LRFC que publica el SAT.
+
+**Ejemplo de uso**
+```vb
+SET PROCEDURE TO 'sw-services.prg' ADDITIVE
+cURL = 'http://services.test.sw.com.mx'
+cUser = 'demo'
+cPassword = '123456789'
+cLRFC = 'LSO1306189R5'
+cToken = GetTokenValue(Authentication(cURL, cUser, cPassword))
+Respuesta = SearchByLRFC(cURL, cToken, cLRFC)
+? Respuesta 
+MESSAGEBOX(Respuesta)
+```
+
+## Validacion LCO
+Este servicio verifica que el número de certificado proporcionado se encuentre válido, así como la vigencia del mismo.
+
+**Ejemplo de uso**
+```vb
+SET PROCEDURE TO 'sw-services.prg' ADDITIVE
+cURL = 'http://services.test.sw.com.mx'
+cUser = 'demo'
+cPassword = '123456789'
+cLCO_Cert = '00001000000304726808'
+cToken = GetTokenValue(Authentication(cURL, cUser, cPassword))
+Respuesta = SearchByNoCert(cURL, cToken, cLCO_Cert)
+? Respuesta 
+MESSAGEBOX(Respuesta)
+```
 
 # Consulta Estatus SAT
 Este método recibe RFC emisor, RFC receptor, total y UUID de la factura a la cual consultaremos su Estatus en el SAT. Se retorna un string (Xml) con la respuesta del servicio del SAT.
@@ -215,8 +234,7 @@ cRfcEmisor = 'LSO1306189R5'
 cRfcReceptor = 'XAXX010101000'
 cTotal = '603.20'
 cUUID = '1fe614f5-74c5-4792-8456-eef4e6afebf2'
-cSello = 'HD7zg=='
-xmlResponse = EstatusCFDI(cUrl, cRfcEmisor, cRfcReceptor, cTotal, cUUID, cSello)
+xmlResponse = EstatusCFDI(cUrl, cRfcEmisor, cRfcReceptor, cTotal, cUUID)
 ? xmlResponse
 MESSAGEBOX(xmlResponse)
 ```

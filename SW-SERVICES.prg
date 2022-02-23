@@ -1,13 +1,13 @@
 LOCAL oErr as EXCEPTION
 
 && Status SAT
-Function EstatusCFDI(cURL,cRfcEmisor, cRfcReceptor, cTotal, cUUID)
+Function EstatusCFDI(cURL,cRfcEmisor, cRfcReceptor, cTotal, cUUID, cSello)
 
 	sRequest = '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:tem="http://tempuri.org/">' + ;
 '<soapenv:Header/>' + ;
 '<soapenv:Body>' + ;
 '<tem:Consulta>' + ;
-'<tem:expresionImpresa><![CDATA[?re='+cRfcEmisor+'&rr='+cRfcReceptor+'&tt='+cTotal+'&id='+cUUID+']]></tem:expresionImpresa>' +;
+'<tem:expresionImpresa><![CDATA[?re='+cRfcEmisor+'&rr='+cRfcReceptor+'&tt='+cTotal+'&id='+cUUID+'&fe='+cSello+']]></tem:expresionImpresa>' +;
 '</tem:Consulta>' + ;
 '</soapenv:Body>' + ;
 '</soapenv:Envelope>'
@@ -25,7 +25,7 @@ Function EstatusCFDI(cURL,cRfcEmisor, cRfcReceptor, cTotal, cUUID)
 
 	Catch To oErr
 
-		_Estatus = "Error, sucedio un problema en la función EstatusCFDI" + sp + sp + ;
+		_Estatus = "Error, sucedio un problema en la funciÃ³n EstatusCFDI" + sp + sp + ;
 			"[  Error: ] " + Str(oErr.ErrorNo) + sp + ;
 			"[  LineNo: ] " + Str(oErr.Lineno) + sp + ;
 			"[  Message: ] " + oErr.Message + sp + ;
@@ -58,7 +58,7 @@ FUNCTION Authentication(cURL, cUser, cPassword)
 		_token =  oHTTP.responseText
   CATCH TO oErr
 	   
-		  _token= "Error, sucedio un problema en la función Authentication" + sp + sp + ;
+		  _token= "Error, sucedio un problema en la funciÃ³n Authentication" + sp + sp + ;
 				  "[  Error: ] " + STR(oErr.ErrorNo) + sp + ;
 	    		  "[  LineNo: ] " + STR(oErr.LineNo) + sp + ; 
 	    		  "[  Message: ] " + oErr.Message + sp + ; 
@@ -78,7 +78,7 @@ TRY
   tokenValue = dataValue.get ('token')
 CATCH TO oErr
 	sp = CHR(13)+CHR(10)
-	tokenValue = "Error, sucedio un problema en la función GetTokenValue" + sp + sp + ;
+	tokenValue = "Error, sucedio un problema en la funciÃ³n GetTokenValue" + sp + sp + ;
 				  "[  Error: ] " + STR(oErr.ErrorNo) + sp + ;
 	    		  "[  LineNo: ] " + STR(oErr.LineNo) + sp + ; 
 	    		  "[  Message: ] " + oErr.Message + sp + ; 
@@ -117,7 +117,7 @@ FUNCTION Stamp(cURL, cToken, cXML, cVersion)
 	
   	CATCH TO oErr
 	   
-		 StampV = "Error, sucedio un problema en la función Stamp" + sp + sp + ;
+		 StampV = "Error, sucedio un problema en la funciÃ³n Stamp" + sp + sp + ;
 				  "[  Error: ] " + STR(oErr.ErrorNo) + sp + ;
 	    		  "[  LineNo: ] " + STR(oErr.LineNo) + sp + ; 
 	    		  "[  Message: ] " + oErr.Message + sp + ; 
@@ -162,7 +162,7 @@ FUNCTION StampRet(cURL, cToken, cXML)
 	 
   	CATCH TO oErr
 	   
-		 StampRet = "Error, sucedio un problema en la función StampRet" + sp + sp + ;
+		 StampRet = "Error, sucedio un problema en la funciÃ³n StampRet" + sp + sp + ;
 				  "[  Error: ] " + STR(oErr.ErrorNo) + sp + ;
 	    		  "[  LineNo: ] " + STR(oErr.LineNo) + sp + ; 
 	    		  "[  Message: ] " + oErr.Message + sp + ; 
@@ -176,7 +176,7 @@ FUNCTION StampRet(cURL, cToken, cXML)
 RETURN StampRet
 
 &&CancelationByCSD
-FUNCTION CancelationByCSD(cURL, cToken, cUUID, cCer, cKey, cRFC, cPassword)
+FUNCTION CancelationByCSD(cURL, cToken, cUUID, cCer, cKey, cRFC, cPassword, cMotivo, cFosustitucion)
 
 	sVersion = '/cfdi33/cancel/csd/'
 	sURL = cURL + sVersion
@@ -187,7 +187,9 @@ FUNCTION CancelationByCSD(cURL, cToken, cUUID, cCer, cKey, cRFC, cPassword)
 		body = 		'{'
     	body = body + 	'"uuid": "' + cUUID + '", ' 
 		body = body + 	'"password": "' + cPassword + '", ' 
- 		body = body + 	'"rfc": "' + cRFC + '", ' 
+ 		body = body + 	'"rfc": "' + cRFC + '", '
+ 		body = body + 	'"motivo": "' + cMotivo+ '", ' 
+ 		body = body + 	'"foliosustitucion": "' + cFosustitucion+ '", '  
  		body = body + 	'"b64Cer": "' + cCer + '", ' 
  		body = body + 	'"b64Key": "' + cKey + '"' 
  		body = body + '}'   
@@ -205,7 +207,7 @@ FUNCTION CancelationByCSD(cURL, cToken, cUUID, cCer, cKey, cRFC, cPassword)
 	 
 	 CATCH TO oErr
 	   
-	   _Cancelation = "Error, sucedio un problema en la función CancelationByCSD" + sp + sp + ;
+	   _Cancelation = "Error, sucedio un problema en la funciÃ³n CancelationByCSD" + sp + sp + ;
 					  "[  Error: ] " + STR(oErr.ErrorNo) + sp + ;
 		    		  "[  LineNo: ] " + STR(oErr.LineNo) + sp + ; 
 		    		  "[  Message: ] " + oErr.Message + sp + ; 
@@ -249,7 +251,7 @@ FUNCTION CancelationByXML(cURL, cToken, cXML)
 	 
 	 CATCH TO oErr
 	   
-	   _Cancelation = "Error, sucedio un problema en la función CancelationByXML" + sp + sp + ;
+	   _Cancelation = "Error, sucedio un problema en la funciÃ³n CancelationByXML" + sp + sp + ;
 					  "[  Error: ] " + STR(oErr.ErrorNo) + sp + ;
 		    		  "[  LineNo: ] " + STR(oErr.LineNo) + sp + ; 
 		    		  "[  Message: ] " + oErr.Message + sp + ; 
@@ -263,7 +265,7 @@ FUNCTION CancelationByXML(cURL, cToken, cXML)
 RETURN _Cancelation
 
 &&CancelationByPFX
-FUNCTION CancelationByPFX(cURL, cToken, cUUID, cRFC, cPassword, cPFX)
+FUNCTION CancelationByPFX(cURL, cToken, cUUID, cPFX, cRFC, cPassword, cMotivo, cFosustitucion)
 
 	sVersion = '/cfdi33/cancel/pfx'
 	sURL = cURL + sVersion
@@ -274,7 +276,9 @@ FUNCTION CancelationByPFX(cURL, cToken, cUUID, cRFC, cPassword, cPFX)
 		body = 		'{'
     	body = body + 	'"uuid": "' + cUUID + '", ' 
 		body = body + 	'"password": "' + cPassword + '", ' 
- 		body = body + 	'"rfc": "' + cRFC + '", ' 
+ 		body = body + 	'"rfc": "' + cRFC + '", '
+ 		body = body + 	'"motivo": "' + cMotivo+ '", ' 
+ 		body = body + 	'"foliosustitucion": "' + cFosustitucion+ '", '  
  		body = body + 	'"b64Pfx": "' + cPFX + '"' 
  		body = body + '}'   
 	 
@@ -291,7 +295,7 @@ FUNCTION CancelationByPFX(cURL, cToken, cUUID, cRFC, cPassword, cPFX)
 	 
 	 CATCH TO oErr
 	   
-	   _Cancelation = "Error, sucedio un problema en la función CancelationByPFX" + sp + sp + ;
+	   _Cancelation = "Error, sucedio un problema en la funciÃ³n CancelationByPFX" + sp + sp + ;
 					  "[  Error: ] " + STR(oErr.ErrorNo) + sp + ;
 		    		  "[  LineNo: ] " + STR(oErr.LineNo) + sp + ; 
 		    		  "[  Message: ] " + oErr.Message + sp + ; 
@@ -306,9 +310,9 @@ RETURN _Cancelation
 
 
 &&CancelationByUUID
-FUNCTION CancelationByUUID(cToken, cURL, cUUID, cRFC)
+FUNCTION CancelationByUUID(cToken, cURL, cUUID, cRFC, cMotivo, cFosustitucion)
 
-	sVersion = '/cfdi33/cancel/' + cRFC + '/' + cUUID + '/'
+	sVersion = '/cfdi33/cancel/' + cRFC + '/' + cUUID + '/' + '/' + cMotivo + '/' + cFosustitucion
 	sURL = cURL + sVersion
 	sp = CHR(13)+CHR(10)
 	
@@ -325,7 +329,7 @@ FUNCTION CancelationByUUID(cToken, cURL, cUUID, cRFC)
 	 
 	 CATCH TO oErr
 	   
-	   _Cancelation = "Error, sucedio un problema en la función CancelationByUUID" + sp + sp + ;
+	   _Cancelation = "Error, sucedio un problema en la funciÃ³n CancelationByUUID" + sp + sp + ;
 					  "[  Error: ] " + STR(oErr.ErrorNo) + sp + ;
 		    		  "[  LineNo: ] " + STR(oErr.LineNo) + sp + ; 
 		    		  "[  Message: ] " + oErr.Message + sp + ; 
@@ -359,7 +363,7 @@ FUNCTION AccountBalance(cURL, cToken)
 		
 	 CATCH TO oErr
 	   
-	_AccountBalance = "Error, sucedio un problema en la función AccountBalance" + sp + sp + ;
+	_AccountBalance = "Error, sucedio un problema en la funciÃ³n AccountBalance" + sp + sp + ;
 					  "[  Error: ] " + STR(oErr.ErrorNo) + sp + ;
 		    		  "[  LineNo: ] " + STR(oErr.LineNo) + sp + ; 
 		    		  "[  Message: ] " + oErr.Message + sp + ; 
@@ -372,7 +376,7 @@ FUNCTION AccountBalance(cURL, cToken)
 
 RETURN _AccountBalance
 
-&&Emisión-Timbrado
+&&EmisiÃ³n-Timbrado
 FUNCTION Issue(cURL, cToken, cXML, cVersion)
 
 	StampVersion = LOWER(cVersion)
@@ -399,7 +403,7 @@ FUNCTION Issue(cURL, cToken, cXML, cVersion)
 		
   	CATCH TO oErr
 	   
-		 _Issue= "Error, sucedio un problema en la función Issue" + sp + sp + ;
+		 _Issue= "Error, sucedio un problema en la funciÃ³n Issue" + sp + sp + ;
 				  "[  Error: ] " + STR(oErr.ErrorNo) + sp + ;
 	    		  "[  LineNo: ] " + STR(oErr.LineNo) + sp + ; 
 	    		  "[  Message: ] " + oErr.Message + sp + ; 
@@ -412,11 +416,11 @@ FUNCTION Issue(cURL, cToken, cXML, cVersion)
 	
 RETURN _Issue
 
-&&Validación de XML
+&&ValidaciÃ³n de XML
 FUNCTION ValidateXML(cURL, cToken, cXML)
 
 	xml =  cXML
-	cService = '/validate/cfdi33/'
+	cService = '/validate/cfdi/'
 	
 	sp = CHR(13)+CHR(10)
 	_bound = "AaB03x"
@@ -438,7 +442,7 @@ FUNCTION ValidateXML(cURL, cToken, cXML)
 	
   	CATCH TO oErr
 	   
-		_Validate = "Error, sucedio un problema en la función ValidateXML" + sp + sp + ;
+		_Validate = "Error, sucedio un problema en la funciÃ³n ValidateXML" + sp + sp + ;
 				  "[  Error: ] " + STR(oErr.ErrorNo) + sp + ;
 	    		  "[  LineNo: ] " + STR(oErr.LineNo) + sp + ; 
 	    		  "[  Message: ] " + oErr.Message + sp + ; 
@@ -452,75 +456,6 @@ FUNCTION ValidateXML(cURL, cToken, cXML)
 RETURN _Validate 
 
 
-&&Busqueda por LRFC
-FUNCTION SearchByLRFC(cURL, cToken, cRFC)
-
-	cService = '/lrfc/'+cRFC
-	
-	sp = CHR(13)+CHR(10)
-    sUrl = cURL + cService 
-     
-  	TRY  
-		oHTTP = CreateObject("MSXML2.XMLHTTP")
-		
-		WITH oHTTP
-			 .open ("GET", sUrl, .F.)
-			 .setRequestHeader ('Authorization', 'bearer '+ cToken)
-			 .setRequestHeader ('Content-Type', 'application/json')
-			 .send ()
-		ENDWITH
-		
-		_LRFC = oHTTP.responseText
-	
-  	CATCH TO oErr
-	   
-		   _LRFC= "Error, sucedio un problema en la función SearchByLRFC" + sp + sp + ;
-				  "[  Error: ] " + STR(oErr.ErrorNo) + sp + ;
-	    		  "[  LineNo: ] " + STR(oErr.LineNo) + sp + ; 
-	    		  "[  Message: ] " + oErr.Message + sp + ; 
-	    		  "[  Procedure: ] " + oErr.Procedure + sp + ; 
-	    		  "[  Details: ] " + oErr.Details + sp + ; 
-	    		  "[  StackLevel: ] " + STR(oErr.StackLevel) + sp + ; 
-	    		  "[  LineContents: ] " + oErr.LineContents
-
-  	ENDTRY	
-	
-RETURN _LRFC
-
-&&Busqueda por NoCertificado
-FUNCTION SearchByNoCert(cURL, cToken, cCert)
-
-	cService = '/lco/'+cCert
-	
-	sp = CHR(13)+CHR(10)
-    sUrl = cURL + cService 
-     
-  	TRY  
-		oHTTP = CreateObject("MSXML2.XMLHTTP")
-		
-		WITH oHTTP
-			 .open ("GET", sUrl, .F.)
-			 .setRequestHeader ('Authorization', 'bearer '+ cToken)
-			 .setRequestHeader ('Content-Type', 'application/json')
-			 .send ()
-		ENDWITH
-		
-		_Certificate = oHTTP.responseText
-	
-  	CATCH TO oErr
-	   
-		_Certificate = "Error, sucedio un problema en la función SearchByNoCert" + sp + sp + ;
-				  "[  Error: ] " + STR(oErr.ErrorNo) + sp + ;
-	    		  "[  LineNo: ] " + STR(oErr.LineNo) + sp + ; 
-	    		  "[  Message: ] " + oErr.Message + sp + ; 
-	    		  "[  Procedure: ] " + oErr.Procedure + sp + ; 
-	    		  "[  Details: ] " + oErr.Details + sp + ; 
-	    		  "[  StackLevel: ] " + STR(oErr.StackLevel) + sp + ; 
-	    		  "[  LineContents: ] " + oErr.LineContents
-
-  	ENDTRY	
-	
-RETURN _Certificate 
 ************************************************************************************************
 *																							   *
 *			JSON Library																	   *
@@ -991,18 +926,18 @@ define class json as custom
 
 
 	function fixUnicode(cStr)
-		cStr = StrTran(cStr,'\u00e1','á')
-		cStr = StrTran(cStr,'\u00e9','é')
-		cStr = StrTran(cStr,'\u00ed','í')
-		cStr = StrTran(cStr,'\u00f3','ó')
-		cStr = StrTran(cStr,'\u00fa','ú')
-		cStr = StrTran(cStr,'\u00c1','Á')
-		cStr = StrTran(cStr,'\u00c9','É')
-		cStr = StrTran(cStr,'\u00cd','Í')
-		cStr = StrTran(cStr,'\u00d3','Ó')
-		cStr = StrTran(cStr,'\u00da','Ú')
-		cStr = StrTran(cStr,'\u00f1','ñ')
-		cStr = StrTran(cStr,'\u00d1','Ñ')
+		cStr = StrTran(cStr,'\u00e1','Ã¡')
+		cStr = StrTran(cStr,'\u00e9','Ã©')
+		cStr = StrTran(cStr,'\u00ed','Ã­')
+		cStr = StrTran(cStr,'\u00f3','Ã³')
+		cStr = StrTran(cStr,'\u00fa','Ãº')
+		cStr = StrTran(cStr,'\u00c1','Ã')
+		cStr = StrTran(cStr,'\u00c9','Ã‰')
+		cStr = StrTran(cStr,'\u00cd','Ã')
+		cStr = StrTran(cStr,'\u00d3','Ã“')
+		cStr = StrTran(cStr,'\u00da','Ãš')
+		cStr = StrTran(cStr,'\u00f1','Ã±')
+		cStr = StrTran(cStr,'\u00d1','Ã‘')
 	return cStr
 
 
@@ -1089,8 +1024,3 @@ Hidden ;
 	return ''
 
 enddefine
-
-
-
-
-
