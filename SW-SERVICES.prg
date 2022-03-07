@@ -25,7 +25,7 @@ Function EstatusCFDI(cURL,cRfcEmisor, cRfcReceptor, cTotal, cUUID, cSello)
 
 	Catch To oErr
 
-		_Estatus = "Error, sucedio un problema en la funciÃ³n EstatusCFDI" + sp + sp + ;
+		_Estatus = "Error, sucedio un problema en la funci�n EstatusCFDI" + sp + sp + ;
 			"[  Error: ] " + Str(oErr.ErrorNo) + sp + ;
 			"[  LineNo: ] " + Str(oErr.Lineno) + sp + ;
 			"[  Message: ] " + oErr.Message + sp + ;
@@ -58,7 +58,7 @@ FUNCTION Authentication(cURL, cUser, cPassword)
 		_token =  oHTTP.responseText
   CATCH TO oErr
 	   
-		  _token= "Error, sucedio un problema en la funciÃ³n Authentication" + sp + sp + ;
+		  _token= "Error, sucedio un problema en la funci�n Authentication" + sp + sp + ;
 				  "[  Error: ] " + STR(oErr.ErrorNo) + sp + ;
 	    		  "[  LineNo: ] " + STR(oErr.LineNo) + sp + ; 
 	    		  "[  Message: ] " + oErr.Message + sp + ; 
@@ -78,7 +78,7 @@ TRY
   tokenValue = dataValue.get ('token')
 CATCH TO oErr
 	sp = CHR(13)+CHR(10)
-	tokenValue = "Error, sucedio un problema en la funciÃ³n GetTokenValue" + sp + sp + ;
+	tokenValue = "Error, sucedio un problema en la funci�n GetTokenValue" + sp + sp + ;
 				  "[  Error: ] " + STR(oErr.ErrorNo) + sp + ;
 	    		  "[  LineNo: ] " + STR(oErr.LineNo) + sp + ; 
 	    		  "[  Message: ] " + oErr.Message + sp + ; 
@@ -207,7 +207,7 @@ FUNCTION CancelationByCSD(cURL, cToken, cUUID, cCer, cKey, cRFC, cPassword, cMot
 	 
 	 CATCH TO oErr
 	   
-	   _Cancelation = "Error, sucedio un problema en la funciÃ³n CancelationByCSD" + sp + sp + ;
+	   _Cancelation = "Error, sucedio un problema en la funci\u00f3n CancelationByCSD" + sp + sp + ;
 					  "[  Error: ] " + STR(oErr.ErrorNo) + sp + ;
 		    		  "[  LineNo: ] " + STR(oErr.LineNo) + sp + ; 
 		    		  "[  Message: ] " + oErr.Message + sp + ; 
@@ -926,18 +926,18 @@ define class json as custom
 
 
 	function fixUnicode(cStr)
-		cStr = StrTran(cStr,'\u00e1','Ã¡')
-		cStr = StrTran(cStr,'\u00e9','Ã©')
-		cStr = StrTran(cStr,'\u00ed','Ã­')
-		cStr = StrTran(cStr,'\u00f3','Ã³')
-		cStr = StrTran(cStr,'\u00fa','Ãº')
-		cStr = StrTran(cStr,'\u00c1','Ã')
-		cStr = StrTran(cStr,'\u00c9','Ã‰')
-		cStr = StrTran(cStr,'\u00cd','Ã')
-		cStr = StrTran(cStr,'\u00d3','Ã“')
-		cStr = StrTran(cStr,'\u00da','Ãš')
-		cStr = StrTran(cStr,'\u00f1','Ã±')
-		cStr = StrTran(cStr,'\u00d1','Ã‘')
+		cStr = StrTran(cStr,'\u00e1','�')
+		cStr = StrTran(cStr,'\u00e9','�')
+		cStr = StrTran(cStr,'\u00ed','�')
+		cStr = StrTran(cStr,'\u00f3','�')
+		cStr = StrTran(cStr,'\u00fa','�')
+		cStr = StrTran(cStr,'\u00c1','�')
+		cStr = StrTran(cStr,'\u00c9','�')
+		cStr = StrTran(cStr,'\u00cd','�')
+		cStr = StrTran(cStr,'\u00d3','�')
+		cStr = StrTran(cStr,'\u00da','�')
+		cStr = StrTran(cStr,'\u00f1','�')
+		cStr = StrTran(cStr,'\u00d1','�')
 	return cStr
 
 
