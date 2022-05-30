@@ -14,7 +14,7 @@ Integrar en nuestro proyecto el archivo sw-services.prg el cual contiene los mé
 
 
 ## Autenticación
-El servicio de Autenticación es utilizado principalmente para obtener el  **token**  el cual sera utilizado para poder timbrar nuestro CFDI (xml) ya emitido (sellado), para poder utilizar este servicio es necesario que cuente con un  **usuario**  y  **contraseña** para posteriormente obtenga el token, usted puede utilizar los que están en este ejemplo para el ambiente de  **Pruebas**.
+El servicio de Autenticación es utilizado principalmente para obtener el  **token**  el cual será utilizado para poder timbrar nuestro CFDI (xml) ya emitido (sellado), para poder utilizar este servicio es necesario que cuente con un  **usuario**  y  **contraseña** para posteriormente obtenga el token, usted puede utilizar los que están en este ejemplo para el ambiente de  **Pruebas**.
 
 **Obtener Token**
 ```vb
@@ -74,7 +74,7 @@ Como su nombre lo indica, este método recibe todos los elementos que componen e
 - UUID
 - RFC emisor
 - Motivo
-- Foliosustituci�n
+- Foliosustituci�n
 
 **Ejemplo de uso**
 
@@ -105,7 +105,7 @@ Necesario:
 - UUID
 - RFC emisor
 - Motivo
-- Foliosustituci�n
+- Foliosustituci�n
 
 **Ejemplo de uso**
 
@@ -153,7 +153,7 @@ Necesario:
 -   UUID
 -   RFC emisor
 - Motivo
-- Foliosustituci�n
+- Foliosustituci�n
 
 **Ejemplo de uso**
 
