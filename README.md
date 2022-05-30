@@ -2,7 +2,7 @@
 <img  src="http://developers.sw.com.mx/wp-content/uploads/2017/05/foxpro-icon.fw_-100x100.png">
 </p>
 <p  align="center">
-<img  src="http://sw.com.mx/images/logo.png">
+<img  src="https://sw.com.mx/wp-content/themes/sw/images/logo-swsapien.svg">
 </p>
 
 # Instalación del SDK
@@ -74,7 +74,7 @@ Como su nombre lo indica, este método recibe todos los elementos que componen e
 - UUID
 - RFC emisor
 - Motivo
-- Foliosustituci�n
+- FolioSustitucion
 
 **Ejemplo de uso**
 
@@ -105,7 +105,7 @@ Necesario:
 - UUID
 - RFC emisor
 - Motivo
-- Foliosustituci�n
+- FolioSustitución
 
 **Ejemplo de uso**
 
@@ -153,7 +153,7 @@ Necesario:
 -   UUID
 -   RFC emisor
 - Motivo
-- Foliosustituci�n
+- FolioSustitución
 
 **Ejemplo de uso**
 
