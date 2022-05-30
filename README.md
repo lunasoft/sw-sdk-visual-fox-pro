@@ -2,7 +2,7 @@
 <img  src="http://developers.sw.com.mx/wp-content/uploads/2017/05/foxpro-icon.fw_-100x100.png">
 </p>
 <p  align="center">
-<img  src="http://sw.com.mx/images/logo.png">
+<img  src="https://sw.com.mx/wp-content/themes/sw/images/logo-swsapien.svg">
 </p>
 
 # Instalaci贸n del SDK
@@ -14,7 +14,7 @@ Integrar en nuestro proyecto el archivo sw-services.prg el cual contiene los m茅
 
 
 ## Autenticaci贸n
-El servicio de Autenticaci贸n es utilizado principalmente para obtener el  **token**  el cual sera utilizado para poder timbrar nuestro CFDI (xml) ya emitido (sellado), para poder utilizar este servicio es necesario que cuente con un  **usuario**  y  **contrase帽a** para posteriormente obtenga el token, usted puede utilizar los que est谩n en este ejemplo para el ambiente de  **Pruebas**.
+El servicio de Autenticaci贸n es utilizado principalmente para obtener el  **token**  el cual ser谩 utilizado para poder timbrar nuestro CFDI (xml) ya emitido (sellado), para poder utilizar este servicio es necesario que cuente con un  **usuario**  y  **contrase帽a** para posteriormente obtenga el token, usted puede utilizar los que est谩n en este ejemplo para el ambiente de  **Pruebas**.
 
 **Obtener Token**
 ```vb
@@ -74,7 +74,7 @@ Como su nombre lo indica, este m茅todo recibe todos los elementos que componen e
 - UUID
 - RFC emisor
 - Motivo
-- Foliosustituci髇
+- FolioSustitucion
 
 **Ejemplo de uso**
 
@@ -105,7 +105,7 @@ Necesario:
 - UUID
 - RFC emisor
 - Motivo
-- Foliosustituci髇
+- FolioSustituci贸n
 
 **Ejemplo de uso**
 
@@ -153,7 +153,7 @@ Necesario:
 -   UUID
 -   RFC emisor
 - Motivo
-- Foliosustituci髇
+- FolioSustituci贸n
 
 **Ejemplo de uso**
 
