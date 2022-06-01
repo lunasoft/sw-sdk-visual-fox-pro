@@ -191,38 +191,6 @@ Respuesta = ValidateXML(cURL, cToken, cXML)
 MESSAGEBOX(Respuesta)
 ```
 
-## Validacion LRFC
-Este servicio verifica que el RFC proporcionado se encuentre en la lista LRFC que publica el SAT.
-
-**Ejemplo de uso**
-```vb
-SET PROCEDURE TO 'sw-services.prg' ADDITIVE
-cURL = 'http://services.test.sw.com.mx'
-cUser = 'demo'
-cPassword = '123456789'
-cLRFC = 'LSO1306189R5'
-cToken = GetTokenValue(Authentication(cURL, cUser, cPassword))
-Respuesta = SearchByLRFC(cURL, cToken, cLRFC)
-? Respuesta 
-MESSAGEBOX(Respuesta)
-```
-
-## Validacion LCO
-Este servicio verifica que el número de certificado proporcionado se encuentre válido, así como la vigencia del mismo.
-
-**Ejemplo de uso**
-```vb
-SET PROCEDURE TO 'sw-services.prg' ADDITIVE
-cURL = 'http://services.test.sw.com.mx'
-cUser = 'demo'
-cPassword = '123456789'
-cLCO_Cert = '00001000000304726808'
-cToken = GetTokenValue(Authentication(cURL, cUser, cPassword))
-Respuesta = SearchByNoCert(cURL, cToken, cLCO_Cert)
-? Respuesta 
-MESSAGEBOX(Respuesta)
-```
-
 # Consulta Estatus SAT
 Este método recibe RFC emisor, RFC receptor, total y UUID de la factura a la cual consultaremos su Estatus en el SAT. Se retorna un string (Xml) con la respuesta del servicio del SAT.
 
