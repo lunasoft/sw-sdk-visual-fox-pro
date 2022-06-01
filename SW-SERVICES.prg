@@ -1,13 +1,13 @@
 LOCAL oErr as EXCEPTION
 
 && Status SAT
-Function EstatusCFDI(cURL,cRfcEmisor, cRfcReceptor, cTotal, cUUID)
+Function EstatusCFDI(cURL,cRfcEmisor, cRfcReceptor, cTotal, cUUID, cSello)
 
 	sRequest = '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:tem="http://tempuri.org/">' + ;
 '<soapenv:Header/>' + ;
 '<soapenv:Body>' + ;
 '<tem:Consulta>' + ;
-'<tem:expresionImpresa><![CDATA[?re='+cRfcEmisor+'&rr='+cRfcReceptor+'&tt='+cTotal+'&id='+cUUID+']]></tem:expresionImpresa>' +;
+'<tem:expresionImpresa><![CDATA[?re='+cRfcEmisor+'&rr='+cRfcReceptor+'&tt='+cTotal+'&id='+cUUID+'&fe='+cSello+']]></tem:expresionImpresa>' +;
 '</tem:Consulta>' + ;
 '</soapenv:Body>' + ;
 '</soapenv:Envelope>'
@@ -176,7 +176,7 @@ FUNCTION StampRet(cURL, cToken, cXML)
 RETURN StampRet
 
 &&CancelationByCSD
-FUNCTION CancelationByCSD(cURL, cToken, cUUID, cCer, cKey, cRFC, cPassword)
+FUNCTION CancelationByCSD(cURL, cToken, cUUID, cCer, cKey, cRFC, cPassword, cMotivo, cFosustitucion)
 
 	sVersion = '/cfdi33/cancel/csd/'
 	sURL = cURL + sVersion
@@ -187,7 +187,9 @@ FUNCTION CancelationByCSD(cURL, cToken, cUUID, cCer, cKey, cRFC, cPassword)
 		body = 		'{'
     	body = body + 	'"uuid": "' + cUUID + '", ' 
 		body = body + 	'"password": "' + cPassword + '", ' 
- 		body = body + 	'"rfc": "' + cRFC + '", ' 
+ 		body = body + 	'"rfc": "' + cRFC + '", '
+ 		body = body + 	'"motivo": "' + cMotivo+ '", ' 
+ 		body = body + 	'"foliosustitucion": "' + cFosustitucion+ '", '  
  		body = body + 	'"b64Cer": "' + cCer + '", ' 
  		body = body + 	'"b64Key": "' + cKey + '"' 
  		body = body + '}'   
@@ -263,7 +265,7 @@ FUNCTION CancelationByXML(cURL, cToken, cXML)
 RETURN _Cancelation
 
 &&CancelationByPFX
-FUNCTION CancelationByPFX(cURL, cToken, cUUID, cRFC, cPassword, cPFX)
+FUNCTION CancelationByPFX(cURL, cToken, cUUID, cPFX, cRFC, cPassword, cMotivo, cFosustitucion)
 
 	sVersion = '/cfdi33/cancel/pfx'
 	sURL = cURL + sVersion
@@ -274,7 +276,9 @@ FUNCTION CancelationByPFX(cURL, cToken, cUUID, cRFC, cPassword, cPFX)
 		body = 		'{'
     	body = body + 	'"uuid": "' + cUUID + '", ' 
 		body = body + 	'"password": "' + cPassword + '", ' 
- 		body = body + 	'"rfc": "' + cRFC + '", ' 
+ 		body = body + 	'"rfc": "' + cRFC + '", '
+ 		body = body + 	'"motivo": "' + cMotivo+ '", ' 
+ 		body = body + 	'"foliosustitucion": "' + cFosustitucion+ '", '  
  		body = body + 	'"b64Pfx": "' + cPFX + '"' 
  		body = body + '}'   
 	 
@@ -306,9 +310,9 @@ RETURN _Cancelation
 
 
 &&CancelationByUUID
-FUNCTION CancelationByUUID(cToken, cURL, cUUID, cRFC)
+FUNCTION CancelationByUUID(cToken, cURL, cUUID, cRFC, cMotivo, cFosustitucion)
 
-	sVersion = '/cfdi33/cancel/' + cRFC + '/' + cUUID + '/'
+	sVersion = '/cfdi33/cancel/' + cRFC + '/' + cUUID + '/' + '/' + cMotivo + '/' + cFosustitucion
 	sURL = cURL + sVersion
 	sp = CHR(13)+CHR(10)
 	
@@ -372,7 +376,7 @@ FUNCTION AccountBalance(cURL, cToken)
 
 RETURN _AccountBalance
 
-&&Emisión-Timbrado
+&&EmisiÃ³n-Timbrado
 FUNCTION Issue(cURL, cToken, cXML, cVersion)
 
 	StampVersion = LOWER(cVersion)
@@ -412,11 +416,11 @@ FUNCTION Issue(cURL, cToken, cXML, cVersion)
 	
 RETURN _Issue
 
-&&Validación de XML
+&&ValidaciÃ³n de XML
 FUNCTION ValidateXML(cURL, cToken, cXML)
 
 	xml =  cXML
-	cService = '/validate/cfdi33/'
+	cService = '/validate/cfdi/'
 	
 	sp = CHR(13)+CHR(10)
 	_bound = "AaB03x"
@@ -452,75 +456,6 @@ FUNCTION ValidateXML(cURL, cToken, cXML)
 RETURN _Validate 
 
 
-&&Busqueda por LRFC
-FUNCTION SearchByLRFC(cURL, cToken, cRFC)
-
-	cService = '/lrfc/'+cRFC
-	
-	sp = CHR(13)+CHR(10)
-    sUrl = cURL + cService 
-     
-  	TRY  
-		oHTTP = CreateObject("MSXML2.XMLHTTP")
-		
-		WITH oHTTP
-			 .open ("GET", sUrl, .F.)
-			 .setRequestHeader ('Authorization', 'bearer '+ cToken)
-			 .setRequestHeader ('Content-Type', 'application/json')
-			 .send ()
-		ENDWITH
-		
-		_LRFC = oHTTP.responseText
-	
-  	CATCH TO oErr
-	   
-		   _LRFC= "Error, sucedio un problema en la función SearchByLRFC" + sp + sp + ;
-				  "[  Error: ] " + STR(oErr.ErrorNo) + sp + ;
-	    		  "[  LineNo: ] " + STR(oErr.LineNo) + sp + ; 
-	    		  "[  Message: ] " + oErr.Message + sp + ; 
-	    		  "[  Procedure: ] " + oErr.Procedure + sp + ; 
-	    		  "[  Details: ] " + oErr.Details + sp + ; 
-	    		  "[  StackLevel: ] " + STR(oErr.StackLevel) + sp + ; 
-	    		  "[  LineContents: ] " + oErr.LineContents
-
-  	ENDTRY	
-	
-RETURN _LRFC
-
-&&Busqueda por NoCertificado
-FUNCTION SearchByNoCert(cURL, cToken, cCert)
-
-	cService = '/lco/'+cCert
-	
-	sp = CHR(13)+CHR(10)
-    sUrl = cURL + cService 
-     
-  	TRY  
-		oHTTP = CreateObject("MSXML2.XMLHTTP")
-		
-		WITH oHTTP
-			 .open ("GET", sUrl, .F.)
-			 .setRequestHeader ('Authorization', 'bearer '+ cToken)
-			 .setRequestHeader ('Content-Type', 'application/json')
-			 .send ()
-		ENDWITH
-		
-		_Certificate = oHTTP.responseText
-	
-  	CATCH TO oErr
-	   
-		_Certificate = "Error, sucedio un problema en la función SearchByNoCert" + sp + sp + ;
-				  "[  Error: ] " + STR(oErr.ErrorNo) + sp + ;
-	    		  "[  LineNo: ] " + STR(oErr.LineNo) + sp + ; 
-	    		  "[  Message: ] " + oErr.Message + sp + ; 
-	    		  "[  Procedure: ] " + oErr.Procedure + sp + ; 
-	    		  "[  Details: ] " + oErr.Details + sp + ; 
-	    		  "[  StackLevel: ] " + STR(oErr.StackLevel) + sp + ; 
-	    		  "[  LineContents: ] " + oErr.LineContents
-
-  	ENDTRY	
-	
-RETURN _Certificate 
 ************************************************************************************************
 *																							   *
 *			JSON Library																	   *
@@ -993,7 +928,7 @@ define class json as custom
 	function fixUnicode(cStr)
 		cStr = StrTran(cStr,'\u00e1','á')
 		cStr = StrTran(cStr,'\u00e9','é')
-		cStr = StrTran(cStr,'\u00ed','í')
+		cStr = StrTran(cStr,'\u00ed','í­')
 		cStr = StrTran(cStr,'\u00f3','ó')
 		cStr = StrTran(cStr,'\u00fa','ú')
 		cStr = StrTran(cStr,'\u00c1','Á')
@@ -1089,8 +1024,3 @@ Hidden ;
 	return ''
 
 enddefine
-
-
-
-
-

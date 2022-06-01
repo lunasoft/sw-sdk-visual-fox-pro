@@ -1,13 +1,13 @@
 LOCAL oErr as EXCEPTION
 
 && Status SAT
-Function EstatusCFDI(cURL,cRfcEmisor, cRfcReceptor, cTotal, cUUID)
+Function EstatusCFDI(cURL,cRfcEmisor, cRfcReceptor, cTotal, cUUID, c8Fe)
 
 	sRequest = '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:tem="http://tempuri.org/">' + ;
 '<soapenv:Header/>' + ;
 '<soapenv:Body>' + ;
 '<tem:Consulta>' + ;
-'<tem:expresionImpresa><![CDATA[?re='+cRfcEmisor+'&rr='+cRfcReceptor+'&tt='+cTotal+'&id='+cUUID+']]></tem:expresionImpresa>' +;
+'<tem:expresionImpresa><![CDATA[?re='+cRfcEmisor+'&rr='+cRfcReceptor+'&tt='+cTotal+'&id='+cUUID+'&fe='+c8Fe+']]></tem:expresionImpresa>' +;
 '</tem:Consulta>' + ;
 '</soapenv:Body>' + ;
 '</soapenv:Envelope>'
@@ -310,9 +310,9 @@ RETURN _Cancelation
 
 
 &&CancelationByUUID
-FUNCTION CancelationByUUID(cToken, cURL, cUUID, cRFC)
+FUNCTION CancelationByUUID(cToken, cURL, cUUID, cRFC, cMotivo3, cFsust3)
 
-	sVersion = '/cfdi33/cancel/' + cRFC + '/' + cUUID + '/'
+	sVersion = '/cfdi33/cancel/' + cRFC + '/' + cUUID + '/' + '/' + cMotivo3 + '/' + cFsust3
 	sURL = cURL + sVersion
 	sp = CHR(13)+CHR(10)
 	
@@ -456,75 +456,6 @@ FUNCTION ValidateXML(cURL, cToken, cXML)
 RETURN _Validate 
 
 
-&&Busqueda por LRFC
-FUNCTION SearchByLRFC(cURL, cToken, cRFC)
-
-	cService = '/lrfc/'+cRFC
-	
-	sp = CHR(13)+CHR(10)
-    sUrl = cURL + cService 
-     
-  	TRY  
-		oHTTP = CreateObject("MSXML2.XMLHTTP")
-		
-		WITH oHTTP
-			 .open ("GET", sUrl, .F.)
-			 .setRequestHeader ('Authorization', 'bearer '+ cToken)
-			 .setRequestHeader ('Content-Type', 'application/json')
-			 .send ()
-		ENDWITH
-		
-		_LRFC = oHTTP.responseText
-	
-  	CATCH TO oErr
-	   
-		   _LRFC= "Error, sucedio un problema en la función SearchByLRFC" + sp + sp + ;
-				  "[  Error: ] " + STR(oErr.ErrorNo) + sp + ;
-	    		  "[  LineNo: ] " + STR(oErr.LineNo) + sp + ; 
-	    		  "[  Message: ] " + oErr.Message + sp + ; 
-	    		  "[  Procedure: ] " + oErr.Procedure + sp + ; 
-	    		  "[  Details: ] " + oErr.Details + sp + ; 
-	    		  "[  StackLevel: ] " + STR(oErr.StackLevel) + sp + ; 
-	    		  "[  LineContents: ] " + oErr.LineContents
-
-  	ENDTRY	
-	
-RETURN _LRFC
-
-&&Busqueda por NoCertificado
-FUNCTION SearchByNoCert(cURL, cToken, cCert)
-
-	cService = '/lco/'+cCert
-	
-	sp = CHR(13)+CHR(10)
-    sUrl = cURL + cService 
-     
-  	TRY  
-		oHTTP = CreateObject("MSXML2.XMLHTTP")
-		
-		WITH oHTTP
-			 .open ("GET", sUrl, .F.)
-			 .setRequestHeader ('Authorization', 'bearer '+ cToken)
-			 .setRequestHeader ('Content-Type', 'application/json')
-			 .send ()
-		ENDWITH
-		
-		_Certificate = oHTTP.responseText
-	
-  	CATCH TO oErr
-	   
-		_Certificate = "Error, sucedio un problema en la función SearchByNoCert" + sp + sp + ;
-				  "[  Error: ] " + STR(oErr.ErrorNo) + sp + ;
-	    		  "[  LineNo: ] " + STR(oErr.LineNo) + sp + ; 
-	    		  "[  Message: ] " + oErr.Message + sp + ; 
-	    		  "[  Procedure: ] " + oErr.Procedure + sp + ; 
-	    		  "[  Details: ] " + oErr.Details + sp + ; 
-	    		  "[  StackLevel: ] " + STR(oErr.StackLevel) + sp + ; 
-	    		  "[  LineContents: ] " + oErr.LineContents
-
-  	ENDTRY	
-	
-RETURN _Certificate 
 ************************************************************************************************
 *																							   *
 *			JSON Library																	   *

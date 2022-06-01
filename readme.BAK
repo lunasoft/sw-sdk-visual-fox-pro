@@ -2,7 +2,7 @@
 <img  src="http://developers.sw.com.mx/wp-content/uploads/2017/05/foxpro-icon.fw_-100x100.png">
 </p>
 <p  align="center">
-<img  src="https://sw.com.mx/wp-content/themes/sw/images/logo-swsapien.svg">
+<img  src="http://sw.com.mx/images/logo.png">
 </p>
 
 # Instalación del SDK
@@ -14,7 +14,7 @@ Integrar en nuestro proyecto el archivo sw-services.prg el cual contiene los mé
 
 
 ## Autenticación
-El servicio de Autenticación es utilizado principalmente para obtener el  **token**  el cual será utilizado para poder timbrar nuestro CFDI (xml) ya emitido (sellado), para poder utilizar este servicio es necesario que cuente con un  **usuario**  y  **contraseña** para posteriormente obtenga el token, usted puede utilizar los que están en este ejemplo para el ambiente de  **Pruebas**.
+El servicio de Autenticación es utilizado principalmente para obtener el  **token**  el cual sera utilizado para poder timbrar nuestro CFDI (xml) ya emitido (sellado), para poder utilizar este servicio es necesario que cuente con un  **usuario**  y  **contraseña** para posteriormente obtenga el token, usted puede utilizar los que están en este ejemplo para el ambiente de  **Pruebas**.
 
 **Obtener Token**
 ```vb
@@ -73,8 +73,6 @@ Como su nombre lo indica, este método recibe todos los elementos que componen e
 - Password del archivo key
 - UUID
 - RFC emisor
-- Motivo
-- FolioSustitucion
 
 **Ejemplo de uso**
 
@@ -89,9 +87,7 @@ cKey = STRCONV(FILETOSTR(GETFILE('key')), 13)
 cPasswordCsd = '12345678a'
 cUUID = '5d42df44-0b9f-4bb6-8bf0-3622cb3b2543'
 cRFC = 'LAN8507268IA'
-cMotivo = '02'
-cFosustitucion = ' '
-cResponse= CancelationByCSD(cURL, cToken, cUUID, cCer, cKey, cRFC, cPasswordCsd, cMotivo, cFosustitucion)
+cResponse= CancelationByCSD(cURL, cToken, cUUID, cCer, cKey, cRFC, cPasswordCsd)
 ? cResponse
 MESSAGEBOX(cResponse)
 ```
@@ -104,8 +100,6 @@ Necesario:
 - Password del archivo PFX
 - UUID
 - RFC emisor
-- Motivo
-- FolioSustitución
 
 **Ejemplo de uso**
 
@@ -119,9 +113,7 @@ cPfx = STRCONV(FILETOSTR(GETFILE('pfx')), 13)
 cPasswordCsd = '12345678a'
 cUUID = '5d42df44-0b9f-4bb6-8bf0-3622cb3b2543'
 cRFC = 'LAN8507268IA'
-cMotivo = '01'
-cFosustitucion = '0e6eba79-b61c-42f1-8935-471909450b9a'
-cResponse= CancelationByPFX(cURL, cToken, cUUID, cPfx, cRFC, cPassword, cMotivo, cFosustitucion)
+cResponse= CancelationByPFX(cURL, cToken, cUUID, cPfx, cRFC, cPassword)
 ? cResponse
 MESSAGEBOX(cResponse)
 ```
@@ -152,8 +144,6 @@ Como su nombre lo indica, este método solo recibe un UUID y Rfc Emisor, pero se
 Necesario:
 -   UUID
 -   RFC emisor
-- Motivo
-- FolioSustitución
 
 **Ejemplo de uso**
 
@@ -167,9 +157,7 @@ cPfx = STRCONV(FILETOSTR(GETFILE('pfx')), 13)
 cPasswordCsd = '12345678a'
 cUUID = '5d42df44-0b9f-4bb6-8bf0-3622cb3b2543'
 cRFC = 'LAN8507268IA'
-cMotivo = '02'
-cFosustitucion = ' '
-cResponse= CancelationByPFX(cURL, cToken, cUUID, cPfx, cRFC, cPassword, Motivo, cFosustitucion)
+cResponse= CancelationByPFX(cURL, cToken, cUUID, cPfx, cRFC, cPassword)
 ? cResponse
 MESSAGEBOX(cResponse)
 ```
@@ -203,7 +191,6 @@ Respuesta = ValidateXML(cURL, cToken, cXML)
 MESSAGEBOX(Respuesta)
 ```
 
-
 # Consulta Estatus SAT
 Este método recibe RFC emisor, RFC receptor, total y UUID de la factura a la cual consultaremos su Estatus en el SAT. Se retorna un string (Xml) con la respuesta del servicio del SAT.
 
@@ -215,8 +202,7 @@ cRfcEmisor = 'LSO1306189R5'
 cRfcReceptor = 'XAXX010101000'
 cTotal = '603.20'
 cUUID = '1fe614f5-74c5-4792-8456-eef4e6afebf2'
-cSello = 'HD7zg=='
-xmlResponse = EstatusCFDI(cUrl, cRfcEmisor, cRfcReceptor, cTotal, cUUID, cSello)
+xmlResponse = EstatusCFDI(cUrl, cRfcEmisor, cRfcReceptor, cTotal, cUUID)
 ? xmlResponse
 MESSAGEBOX(xmlResponse)
 ```
