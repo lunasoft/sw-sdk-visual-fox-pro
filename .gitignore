@@ -1,0 +1,33 @@
+# ---------------------------------------------------------------- #
+# Archivos generados automáticamente por Visual FoxPro (VFP)
+# ---------------------------------------------------------------- #
+*.FXP             # Archivos de programa compilados (NO son código fuente)
+*.DBL             # Archivos de depuración (Debug)
+*.ERR             # Archivos de errores de compilación
+*.SEM             # Archivos de semáforos/bloqueo
+*.CDX             # Archivos de índice (Se deben ignorar si usas DBC, pero los incluiremos si usas tablas libres)
+
+# Archivos de Backup y Temporales
+*.~* # Archivos de backup (ej. *.PRG, *.SCX, etc.)
+*.BAK             # Archivos de backup explícitos
+
+# Archivos de objetos y datos temporales
+# *.VUE           # Vistas temporales
+
+# Archivos de ejecutable y DLLs (Si compilas el proyecto)
+*.EXE
+*.DLL
+*.APP
+
+# ---------------------------------------------------------------- #
+# Archivos de Sistema Operativo y Editores
+# ---------------------------------------------------------------- #
+# Windows
+Thumbs.db
+Desktop.ini
+
+# Editores populares
+.vscode/          # Carpeta de configuración de VS Code
+.sublime-workspace # Archivos de proyecto de Sublime Text
+
+# ---------------------------------------------------------------- #

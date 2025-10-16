@@ -1,20 +1,22 @@
 LOCAL oErr as EXCEPTION
 
 && Status SAT
-Function EstatusCFDI(cURL,cRfcEmisor, cRfcReceptor, cTotal, cUUID)
+Function EstatusCFDI(cURL,cRfcEmisor, cRfcReceptor, cTotal, cUUID, c8Fe)
+    IF NOT ValidarURL(cURL)
+        RETURN "Error: la URL debe iniciar con https://"
+    ENDIF
 
 	sRequest = '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:tem="http://tempuri.org/">' + ;
 '<soapenv:Header/>' + ;
 '<soapenv:Body>' + ;
 '<tem:Consulta>' + ;
-'<tem:expresionImpresa><![CDATA[?re='+cRfcEmisor+'&rr='+cRfcReceptor+'&tt='+cTotal+'&id='+cUUID+']]></tem:expresionImpresa>' +;
+'<tem:expresionImpresa><![CDATA[?re='+cRfcEmisor+'&rr='+cRfcReceptor+'&tt='+cTotal+'&id='+cUUID+'&fe='+c8Fe+']]></tem:expresionImpresa>' +;
 '</tem:Consulta>' + ;
 '</soapenv:Body>' + ;
 '</soapenv:Envelope>'
 	sURL = cURL+'?wsdl'
 	Try
-		oHTTP = Createobject("Microsoft.XMLHTTP")
-
+		oHTTP = CreateObject("MSXML2.ServerXMLHTTP.6.0")
 		With oHTTP
 			.Open ("POST", sURL, .F.)
 			.setRequestHeader('SOAPAction', 'http://tempuri.org/IConsultaCFDIService/Consulta')
@@ -38,38 +40,47 @@ Function EstatusCFDI(cURL,cRfcEmisor, cRfcReceptor, cTotal, cUUID)
 
 	Return _Estatus
 
-&& Authentication
+&& Authentication V2
 FUNCTION Authentication(cURL, cUser, cPassword)
 
-	cService = '/security/authenticate'
-	cURL = cURL +cService
-	sp = CHR(13)+CHR(10)
+    LOCAL cService, sp, oHTTP, cBody, _token
 
-	TRY	
-		oHTTP = CreateObject("Microsoft.XMLHTTP")
+    cService = '/v2/security/authenticate'
+    cURL = cURL + cService
+    sp = CHR(13) + CHR(10)
+    IF NOT ValidarURL(cURL)
+        RETURN "Error: la URL debe iniciar con https://"
+    ENDIF
+    TRY
+        oHTTP = CreateObject("MSXML2.ServerXMLHTTP.6.0")
+        *--- Construir el body JSON ---
+        cBody = '{' + ;
+                '"user":"' + cUser + '",' + ;
+                '"password":"' + cPassword + '"' + ;
+                '}'
 
-		WITH oHTTP
-			 .open ("POST", cURL, .F.)
-			 .setRequestHeader ('user', cUser)
-			 .setRequestHeader ('password', cPassword)
-		ENDWITH
+        WITH oHTTP
+            .open("POST", cURL, .F.)
+            .setRequestHeader("Content-Type", "application/json")
+        ENDWITH
 
-		oHTTP.Send()
-		_token =  oHTTP.responseText
-  CATCH TO oErr
-	   
-		  _token= "Error, sucedio un problema en la funciÃ³n Authentication" + sp + sp + ;
-				  "[  Error: ] " + STR(oErr.ErrorNo) + sp + ;
-	    		  "[  LineNo: ] " + STR(oErr.LineNo) + sp + ; 
-	    		  "[  Message: ] " + oErr.Message + sp + ; 
-	    		  "[  Procedure: ] " + oErr.Procedure + sp + ; 
-	    		  "[  Details: ] " + oErr.Details + sp + ; 
-	    		  "[  StackLevel: ] " + STR(oErr.StackLevel) + sp + ; 
-	    		  "[  LineContents: ] " + oErr.LineContents
+ 
+        oHTTP.Send(cBody)
 
-  ENDTRY
-	
-RETURN _token
+        _token = oHTTP.responseText
+
+    CATCH TO oErr
+        _token = "Error, sucedió un problema en la función Authentication" + sp + sp + ;
+                 "[  Error: ] " + STR(oErr.ErrorNo) + sp + ;
+                 "[  LineNo: ] " + STR(oErr.LineNo) + sp + ;
+                 "[  Message: ] " + oErr.Message + sp + ;
+                 "[  Procedure: ] " + oErr.Procedure + sp + ;
+                 "[  Details: ] " + oErr.Details + sp + ;
+                 "[  StackLevel: ] " + STR(oErr.StackLevel) + sp + ;
+                 "[  LineContents: ] " + oErr.LineContents
+    ENDTRY
+
+    RETURN _token
 
 FUNCTION GetTokenValue(response)
 TRY
@@ -101,9 +112,12 @@ FUNCTION Stamp(cURL, cToken, cXML, cVersion)
 	_bound = "AaB03x"
     sUrl = cURL + cService + cVersion 
     body = '--' + _bound + sp + 'Content-Disposition: form-data; name=xml; filename=xml' + sp + 'Content-Transfer-Encoding: binary'+ sp+sp+xml+sp +'--'+ _bound + '--' + sp
-    
+    *--- Validar que la URL use HTTPS ---
+    IF NOT ValidarURL(cURL)
+        RETURN "Error: la URL debe iniciar con https://"
+    ENDIF
   	TRY  
-		oHTTP = CreateObject("MSXML2.XMLHTTP")
+	    oHTTP = CreateObject("MSXML2.ServerXMLHTTP.6.0")
 		
 		WITH oHTTP
 			 .open ("POST", sUrl, .F.)
@@ -130,51 +144,51 @@ FUNCTION Stamp(cURL, cToken, cXML, cVersion)
 	
 RETURN StampV
 
+
 &&TimbradoRetencion
 FUNCTION StampRet(cURL, cToken, cXML)
-	xml =  cXML
-    sUrl = cURL
+    LOCAL sUrl, sp, _bound, body, oHTTP, StampRetV
+
     sp = CHR(13)+CHR(10)
-    body = '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:tem="http://tempuri.org/"><soapenv:Header/><soapenv:Body><tem:TimbrarRetencionXMLV2><tem:xmlRetencion><![CDATA[' + xml + ']]></tem:xmlRetencion><tem:tokenAutenticacion>' + cToken + '</tem:tokenAutenticacion></tem:TimbrarRetencionXMLV2></soapenv:Body></soapenv:Envelope>'
-  	TRY  
-		oHTTP = CreateObject("MSXML2.XMLHTTP")
-		
-		WITH oHTTP
-			 .open ("POST", sUrl, .F.)
-			 .setRequestHeader ('SOAPAction', 'http://tempuri.org/IwcfTimbradoRetenciones/TimbrarRetencionXMLV2')
-			 .setRequestHeader ('Content-Type', 'text/xml;charset="utf-8"')
-			 .setRequestHeader ('Content-Length', Len(body))
-			 .send (body)
-		ENDWITH
-		response = oHTTP.responseText
-		MESSAGEBOX(response)
-		oXML = CREATEOBJECT('Msxml2.DOMDocument.6.0')
-		oXML.ASYNC = .F.
-		oXML.LOADXML(response)
-		IF oHTTP.status != 200 THEN
-		 oNode = oXML.SelectSingleNode("//faultstring")
-		 StampRet = oNode.text
-		ELSE
- 		 oXML.setProperty("SelectionNamespaces", "xmlns:res='http://tempuri.org/'")	 
-         oNode = oXML.SelectSingleNode("//res:TimbrarRetencionXMLV2Result")
-		 StampRet = oNode.text
-		ENDIF
-	 
-  	CATCH TO oErr
-	   
-		 StampRet = "Error, sucedio un problema en la funciÃ³n StampRet" + sp + sp + ;
-				  "[  Error: ] " + STR(oErr.ErrorNo) + sp + ;
-	    		  "[  LineNo: ] " + STR(oErr.LineNo) + sp + ; 
-	    		  "[  Message: ] " + oErr.Message + sp + ; 
-	    		  "[  Procedure: ] " + oErr.Procedure + sp + ; 
-	    		  "[  Details: ] " + oErr.Details + sp + ; 
-	    		  "[  StackLevel: ] " + STR(oErr.StackLevel) + sp + ; 
-	    		  "[  LineContents: ] " + oErr.LineContents
+    _bound = "AaB03x" && Boundary arbitrario
+    sUrl = cURL + "/retencion/stamp/v3"
 
-  	ENDTRY	
-	
-RETURN StampRet
+    body = "--" + _bound + sp + ;
+           "Content-Disposition: form-data; name=xml; filename=xml" + sp + ;
+           "Content-Transfer-Encoding: binary" + sp + sp + ;
+           cXML + sp + ;
+           "--" + _bound + "--" + sp
+*--- Validar que la URL use HTTPS ---
+    IF NOT ValidarURL(cURL)
+        RETURN "Error: la URL debe iniciar con https://"
+    ENDIF
+    
+    TRY
+        oHTTP = CreateObject("MSXML2.ServerXMLHTTP.6.0")
 
+        WITH oHTTP
+            .open("POST", sUrl, .F.)
+            .setRequestHeader("Authorization", "bearer " + cToken)
+            .setRequestHeader("Content-Type", "multipart/form-data; boundary=" + _bound)
+            .setRequestHeader("Content-Length", LEN(body))
+            .send(body)
+        ENDWITH
+
+        StampRetV = oHTTP.responseText
+
+    CATCH TO oErr
+        StampRetV = "Error, sucedió un problema en la función StampRetV3" + sp + sp + ;
+                    "[  Error: ] " + STR(oErr.ErrorNo) + sp + ;
+                    "[  LineNo: ] " + STR(oErr.LineNo) + sp + ;
+                    "[  Message: ] " + oErr.Message + sp + ;
+                    "[  Procedure: ] " + oErr.Procedure + sp + ;
+                    "[  Details: ] " + oErr.Details + sp + ;
+                    "[  StackLevel: ] " + STR(oErr.StackLevel) + sp + ;
+                    "[  LineContents: ] " + oErr.LineContents
+    ENDTRY
+
+    RETURN StampRetV
+    
 &&CancelationByCSD
 FUNCTION CancelationByCSD(cURL, cToken, cUUID, cCer, cKey, cRFC, cPassword, motivo, fosustitucion)
 
@@ -193,9 +207,14 @@ FUNCTION CancelationByCSD(cURL, cToken, cUUID, cCer, cKey, cRFC, cPassword, moti
  		body = body + 	'"b64Cer": "' + cCer + '", ' 
  		body = body + 	'"b64Key": "' + cKey + '"' 
  		body = body + '}'   
-	 
+	
+	*--- Validar que la URL use HTTPS ---
+    IF NOT ValidarURL(cURL)
+        RETURN "Error: la URL debe iniciar con https://"
+    ENDIF
+     
 	TRY 
-	 	oHTTP = CreateObject("Microsoft.XMLHTTP")   
+	 	oHTTP = CreateObject("MSXML2.ServerXMLHTTP.6.0")
 	 
 		WITH oHTTP
 		 	.open ("POST", sUrl, .F.) 
@@ -228,23 +247,22 @@ FUNCTION CancelationByXML(cURL, cToken, cXML)
 	sVersion = '/cfdi33/cancel/xml'
 	sURL = cURL + sVersion
 	sp = CHR(13)+CHR(10)
-	BOUNDARY = '----WebKitFormBoundary7MA4YWxkTrZu0gW'   
+	_bound = '----WebKitFormBoundary7MA4YWxkTrZu0gW'   
 	   
-	body = ''
+	 body = '--' + _bound + sp + 'Content-Disposition: form-data; name=xml; filename=xml' + sp + 'Content-Transfer-Encoding: binary'+ sp+sp+cXML+sp +'--'+ _bound + '--' + sp
+     
+	*--- Validar que la URL use HTTPS ---
+    IF NOT ValidarURL(cURL)
+        RETURN "Error: la URL debe iniciar con https://"
+    ENDIF
 	
-		body =  sp+sp+'--' + BOUNDARY + sp
-		body = body + 'Content-Disposition: form-data; name="xml"; filename=""' + sp
-		body = body + 'Content-Type:' + sp + sp
-		body = body + cXML + sp
-		body = body + '--' + BOUNDARY + '--'   
-	 
 	TRY 
-	 	oHTTP = CreateObject("Microsoft.XMLHTTP")   
+	 	oHTTP = CreateObject("MSXML2.ServerXMLHTTP.6.0")   
 	 
 		WITH oHTTP
 		 	.open ("POST", sUrl, .F.) 
 		 	.setRequestHeader ('Authorization', 'bearer '+ cToken) 
-			.setRequestHeader ('Content-Type',  'multipart/form-data; boundary=' + BOUNDARY) 
+			.setRequestHeader ('Content-Type',  'multipart/form-data; boundary=' + _bound ) 
 			.send (body)
 		ENDWITH
 		_Cancelation = oHTTP.responseText 
@@ -262,7 +280,7 @@ FUNCTION CancelationByXML(cURL, cToken, cXML)
 
 	ENDTRY
 	
-RETURN _Cancelation
+RETURN _Cancelation 
 
 &&CancelationByPFX
 FUNCTION CancelationByPFX(cURL, cToken, cUUID, cPFX, cRFC, cPassword, motivo, fosustitucion)
@@ -281,14 +299,19 @@ FUNCTION CancelationByPFX(cURL, cToken, cUUID, cPFX, cRFC, cPassword, motivo, fo
  		body = body + 	'"foliosustitucion": "' + fosustitucion + '", '  
  		body = body + 	'"b64Pfx": "' + cPFX + '"' 
  		body = body + '}'   
+	
+	*--- Validar que la URL use HTTPS ---
+    IF NOT ValidarURL(cURL)
+        RETURN "Error: la URL debe iniciar con https://"
+    ENDIF
 	 
 	TRY 
-	 	oHTTP = CreateObject("Microsoft.XMLHTTP")   
+	 	oHTTP = CreateObject("MSXML2.ServerXMLHTTP.6.0")
 	 
 		WITH oHTTP
 		 	.open ("POST", sUrl, .F.) 
 		 	.setRequestHeader ('Authorization', 'bearer '+ cToken) 
-			.setRequestHeader ('Content-Type',  'application/json') 
+			.setRequestHeader ('Content-Type',  'application/json')
 			.send (body)
 		ENDWITH
 		_Cancelation = oHTTP.responseText 
@@ -310,14 +333,22 @@ RETURN _Cancelation
 
 
 &&CancelationByUUID
-FUNCTION CancelationByUUID(cToken, cURL, cUUID, cRFC)
+FUNCTION CancelationByUUID(cToken, cURL, cUUID, cRFC, motivo, fosustitucion)
 
-	sVersion = '/cfdi33/cancel/' + cRFC + '/' + cUUID + '/'
+	sVersion = '/cfdi33/cancel/' + cRFC + '/' + cUUID + '/' + motivo
+	IF NOT EMPTY(ALLTRIM(fosustitucion))            
+	sVersion = sVersion + '/' + ALLTRIM(fosustitucion)    
+	ENDIF
 	sURL = cURL + sVersion
 	sp = CHR(13)+CHR(10)
 	
+	*--- Validar que la URL use HTTPS ---
+    IF NOT ValidarURL(cURL)
+        RETURN "Error: la URL debe iniciar con https://"
+    ENDIF
+	
 	TRY 
-	 	oHTTP = CreateObject("Microsoft.XMLHTTP")   
+	 	oHTTP = CreateObject("MSXML2.ServerXMLHTTP.6.0")  
 	 
 		WITH oHTTP
 		 	.open ("POST", sURL, .F.) 
@@ -336,45 +367,103 @@ FUNCTION CancelationByUUID(cToken, cURL, cUUID, cRFC)
 		    		  "[  Procedure: ] " + oErr.Procedure + sp + ; 
 		    		  "[  Details: ] " + oErr.Details + sp + ; 
 		    		  "[  StackLevel: ] " + STR(oErr.StackLevel) + sp + ; 
-		    		  "[  LineContents: ] " + oErr.LineContents &&+ sVersion 
+		    		  "[  LineContents: ] " + oErr.LineContents  
 
 	ENDTRY
 	
 RETURN _Cancelation
 
+&& Gestion de Timbres
+&& ConsultarBalanceTimbres
+FUNCTION ConsultarBalanceTimbres(cURLBase, cToken)
+	LOCAL sURL, oHTTP, _Response, sp, sEndpoint
+	
+	sEndpoint = '/management/v2/api/users/balance'
+	sURL = cURLBase + sEndpoint
+	sp = CHR(13)+CHR(10)
+	_Response = ''
 
-&& Estado de Cuenta
-FUNCTION AccountBalance(cURL, cToken)
+	*--- Validar que la URL use HTTPS ---
+	IF NOT ValidarURL(cURLBase)
+		RETURN "Error: la URL debe iniciar con https://"
+	ENDIF
 
-	sVersion = '/account/balance'
-	sURL = cURL + sVersion	
-	sp = CHR(13)+CHR(10)   
-
-	TRY 
-	 	oHTTP = CreateObject("Microsoft.XMLHTTP")   
-	 
+	TRY	
+	 	oHTTP = CreateObject("MSXML2.ServerXMLHTTP.6.0")
+	
 		WITH oHTTP
 		 	.open ("GET", sUrl, .F.) 
-		 	.setRequestHeader ('Authorization', 'bearer '+ cToken) 
-			.setRequestHeader ('Content-Type',  'application/json') 
+		 	.setRequestHeader ('Authorization', 'Bearer '+ cToken)
+			.send () 
 		ENDWITH
-		oHTTP.send()
-		_AccountBalance = oHTTP.responseText
-		
-	 CATCH TO oErr
-	   
-	_AccountBalance = "Error, sucedio un problema en la funciÃ³n AccountBalance" + sp + sp + ;
-					  "[  Error: ] " + STR(oErr.ErrorNo) + sp + ;
-		    		  "[  LineNo: ] " + STR(oErr.LineNo) + sp + ; 
-		    		  "[  Message: ] " + oErr.Message + sp + ; 
-		    		  "[  Procedure: ] " + oErr.Procedure + sp + ; 
-		    		  "[  Details: ] " + oErr.Details + sp + ; 
-		    		  "[  StackLevel: ] " + STR(oErr.StackLevel) + sp + ; 
-		    		  "[  LineContents: ] " + oErr.LineContents
-
+		_Response = oHTTP.responseText
+	
+	CATCH TO oErr
+		_Response = "Error, sucedio un problema en la función ConsultarBalanceTimbres" + sp + sp + ;
+					"[ Error: ] " + STR(oErr.ErrorNo) + sp + ;
+					"[ LineNo: ] " + STR(oErr.LineNo) + sp + ;
+					"[ Message: ] " + oErr.Message + sp + ;
+					"[ Procedure: ] " + oErr.Procedure + sp + ;
+					"[ Details: ] " + oErr.Details + sp + ;
+					"[ StackLevel: ] " + STR(oErr.StackLevel) + sp + ;
+					"[ LineContents: ] " + oErr.LineContents
 	ENDTRY
+	
+RETURN _Response
 
-RETURN _AccountBalance
+&& GestionarTimbres (Agregar/Eliminar)
+FUNCTION GestionarTimbres(cURLBase, cToken, cMethod, cUUID, nStamps, cComment)
+	LOCAL sURL, oHTTP, body, _Response, sp, sVersion
+	
+	IF UPPER(cMethod) <> "POST" AND UPPER(cMethod) <> "DELETE"
+		RETURN "Error: El parámetro cMethod debe ser 'POST' o 'DELETE'."
+	ENDIF
+
+	sVersion = '/management/v2/api/dealers/users/' + cUUID + '/stamps'
+	sURL = cURLBase + sVersion
+	sp = CHR(13)+CHR(10)
+	_Response = ''
+	
+	
+	body = '{'
+	body = body + '"stamps": ' + TRANSFORM(nStamps) 
+	
+	IF VARTYPE(cComment) <> 'L' AND NOT EMPTY(cComment) 
+		body = body + ', "comment": "' + cComment + '"'
+	ENDIF
+	
+	body = body + '}'
+	
+	*--- Validar que la URL use HTTPS ---
+	IF NOT ValidarURL(cURLBase)
+		RETURN "Error: la URL debe iniciar con https://"
+	ENDIF
+
+	TRY	
+	 	oHTTP = CreateObject("MSXML2.ServerXMLHTTP.6.0")
+	
+		WITH oHTTP
+		 	.open (cMethod, sUrl, .F.) 
+		 	.setRequestHeader ('Authorization', 'Bearer '+ cToken)
+			.setRequestHeader ('Content-Type', 'application/json')
+			.send (body)
+		ENDWITH
+		_Response = oHTTP.responseText
+	
+	CATCH TO oErr
+		lcAccion = IIF(UPPER(cMethod) == 'POST', 'Agregar Timbres', 'Eliminar Timbres')
+		_Response = "Error, sucedio un problema en la función " + lcAccion + sp + sp + ;
+					"[ Error: ] " + STR(oErr.ErrorNo) + sp + ;
+					"[ LineNo: ] " + STR(oErr.LineNo) + sp + ;
+					"[ Message: ] " + oErr.Message + sp + ;
+					"[ Procedure: ] " + oErr.Procedure + sp + ;
+					"[ Details: ] " + oErr.Details + sp + ;
+					"[ StackLevel: ] " + STR(oErr.StackLevel) + sp + ;
+					"[ LineContents: ] " + oErr.LineContents
+	ENDTRY
+	
+RETURN _Response
+
 
 &&EmisiÃ³n-Timbrado
 FUNCTION Issue(cURL, cToken, cXML, cVersion)
@@ -387,9 +476,14 @@ FUNCTION Issue(cURL, cToken, cXML, cVersion)
 	_bound = "AaB03x"
     sUrl = cURL + cService + cVersion 
     body = '--' + _bound + sp + 'Content-Disposition: form-data; name=xml; filename=xml' + sp + 'Content-Transfer-Encoding: binary'+ sp+sp+xml+sp +'--'+ _bound + '--' + sp
+
+*--- Validar que la URL use HTTPS ---
+    IF NOT ValidarURL(cURL)
+        RETURN "Error: la URL debe iniciar con https://"
+    ENDIF
     
   	TRY  
-		oHTTP = CreateObject("MSXML2.XMLHTTP")
+		oHTTP = CreateObject("MSXML2.ServerXMLHTTP.6.0")
 		
 		WITH oHTTP
 			 .open ("POST", sUrl, .F.)
@@ -426,9 +520,14 @@ FUNCTION ValidateXML(cURL, cToken, cXML)
 	_bound = "AaB03x"
     sUrl = cURL + cService 
     body = '--' + _bound + sp + 'Content-Disposition: form-data; name=xml; filename=xml' + sp + 'Content-Transfer-Encoding: binary'+ sp+sp+xml+sp +'--'+ _bound + '--' + sp
+
+*--- Validar que la URL use HTTPS ---
+    IF NOT ValidarURL(cURL)
+        RETURN "Error: la URL debe iniciar con https://"
+    ENDIF
     
   	TRY  
-		oHTTP = CreateObject("MSXML2.XMLHTTP")
+		oHTTP = CreateObject("MSXML2.ServerXMLHTTP.6.0")
 		
 		WITH oHTTP
 			 .open ("POST", sUrl, .F.)
@@ -456,75 +555,240 @@ FUNCTION ValidateXML(cURL, cToken, cXML)
 RETURN _Validate 
 
 
-&&Busqueda por LRFC
-FUNCTION SearchByLRFC(cURL, cToken, cRFC)
+&& API Administracion de Usuarios
 
-	cService = '/lrfc/'+cRFC
-	
-	sp = CHR(13)+CHR(10)
-    sUrl = cURL + cService 
-     
-  	TRY  
-		oHTTP = CreateObject("MSXML2.XMLHTTP")
-		
-		WITH oHTTP
-			 .open ("GET", sUrl, .F.)
-			 .setRequestHeader ('Authorization', 'bearer '+ cToken)
-			 .setRequestHeader ('Content-Type', 'application/json')
-			 .send ()
-		ENDWITH
-		
-		_LRFC = oHTTP.responseText
-	
-  	CATCH TO oErr
-	   
-		   _LRFC= "Error, sucedio un problema en la funciÃ³n SearchByLRFC" + sp + sp + ;
-				  "[  Error: ] " + STR(oErr.ErrorNo) + sp + ;
-	    		  "[  LineNo: ] " + STR(oErr.LineNo) + sp + ; 
-	    		  "[  Message: ] " + oErr.Message + sp + ; 
-	    		  "[  Procedure: ] " + oErr.Procedure + sp + ; 
-	    		  "[  Details: ] " + oErr.Details + sp + ; 
-	    		  "[  StackLevel: ] " + STR(oErr.StackLevel) + sp + ; 
-	    		  "[  LineContents: ] " + oErr.LineContents
+&& Crear Usuarios
+FUNCTION CreateUser(cBaseURL, cToken, cName, cTaxId, cEmail, nStamps, lUnlimited, cPassword, cNotificationEmail, cPhone)
+    LOCAL cService, cURL, oHTTP, cBody, cResponse, sp
+    sp = CHR(13) + CHR(10)
+    cService = "/management/v2/api/dealers/users"
+    cURL = cBaseURL + cService
 
-  	ENDTRY	
-	
-RETURN _LRFC
+    * Validar que la URL sea HTTPS
+    IF NOT ValidarURL(cURL)
+        RETURN "Error: la URL debe iniciar con https://"
+    ENDIF
 
-&&Busqueda por NoCertificado
-FUNCTION SearchByNoCert(cURL, cToken, cCert)
+    TRY
+        oHTTP = CreateObject("MSXML2.ServerXMLHTTP.6.0")
 
-	cService = '/lco/'+cCert
-	
-	sp = CHR(13)+CHR(10)
-    sUrl = cURL + cService 
-     
-  	TRY  
-		oHTTP = CreateObject("MSXML2.XMLHTTP")
-		
-		WITH oHTTP
-			 .open ("GET", sUrl, .F.)
-			 .setRequestHeader ('Authorization', 'bearer '+ cToken)
-			 .setRequestHeader ('Content-Type', 'application/json')
-			 .send ()
-		ENDWITH
-		
-		_Certificate = oHTTP.responseText
-	
-  	CATCH TO oErr
-	   
-		_Certificate = "Error, sucedio un problema en la funciÃ³n SearchByNoCert" + sp + sp + ;
-				  "[  Error: ] " + STR(oErr.ErrorNo) + sp + ;
-	    		  "[  LineNo: ] " + STR(oErr.LineNo) + sp + ; 
-	    		  "[  Message: ] " + oErr.Message + sp + ; 
-	    		  "[  Procedure: ] " + oErr.Procedure + sp + ; 
-	    		  "[  Details: ] " + oErr.Details + sp + ; 
-	    		  "[  StackLevel: ] " + STR(oErr.StackLevel) + sp + ; 
-	    		  "[  LineContents: ] " + oErr.LineContents
+        * Construir el body JSON dinámico
+        cBody = '{' + ;
+                 '"name":"' + cName + '",' + ;
+                 '"taxId":"' + cTaxId + '",' + ;
+                 '"email":"' + cEmail + '",' + ;
+                 '"stamps":' + TRANSFORM(nStamps) + ',' + ;
+                 '"isUnlimited":' + IIF(lUnlimited, "true", "false") + ',' + ;
+                 '"password":"' + cPassword + '"'
 
-  	ENDTRY	
-	
-RETURN _Certificate 
+        * Campos opcionales
+        IF NOT EMPTY(cNotificationEmail)
+            cBody = cBody + ',"notificationEmail":"' + cNotificationEmail + '"'
+        ENDIF
+        IF NOT EMPTY(cPhone)
+            cBody = cBody + ',"phone":"' + cPhone + '"'
+        ENDIF
+
+        cBody = cBody + '}'
+
+        WITH oHTTP
+            .open("POST", cURL, .F.)
+            .setRequestHeader("Authorization", "Bearer " + cToken)
+            .setRequestHeader("Content-Type", "application/json")
+            .Send(cBody)
+        ENDWITH
+
+        cResponse = oHTTP.responseText
+
+    CATCH TO oErr
+        cResponse = "Error en Crear Usuario" + sp + ;
+                    "[Error: ] " + STR(oErr.ErrorNo) + sp + ;
+                    "[LineNo: ] " + STR(oErr.LineNo) + sp + ;
+                    "[Message: ] " + oErr.Message
+    ENDTRY
+
+    RETURN cResponse
+ENDFUNC
+
+&& Actualizar Usuarios
+FUNCTION UpdateUser(cBaseURL, cToken, cUserID, cName, cTaxId, cNotificationEmail, cPhone, lUnlimited)
+    LOCAL cService, cURL, oHTTP, cBody, cResponse, sp
+    
+    sp = CHR(13) + CHR(10)
+    
+    cService = "/management/v2/api/dealers/users/" + cUserID
+    cURL = cBaseURL + cService
+
+    * Validar que la URL sea HTTPS
+    IF NOT ValidarURL(cBaseURL)
+        RETURN '{"status":"error", "message":"Error: La URL base debe iniciar con https://"}'
+    ENDIF
+
+    TRY
+        oHTTP = CreateObject("MSXML2.ServerXMLHTTP.6.0")
+
+        cBody = '{ "iduser": "' + cUserID + '"'
+        
+        IF VARTYPE(cName) <> 'L' AND NOT EMPTY(cName)
+            cBody = cBody + ',"name":"' + cName + '"'
+        ENDIF
+        
+        IF VARTYPE(cTaxId) <> 'L' AND NOT EMPTY(cTaxId)
+            cBody = cBody + ',"taxId":"' + cTaxId + '"'
+        ENDIF
+
+        IF VARTYPE(cNotificationEmail) <> 'L' AND NOT EMPTY(cNotificationEmail)
+            cBody = cBody + ',"notificationEmail":"' + cNotificationEmail + '"'
+        ENDIF
+
+        IF VARTYPE(cPhone) <> 'L' AND NOT EMPTY(cPhone)
+            cBody = cBody + ',"phone":"' + cPhone + '"'
+        ENDIF
+        
+        IF VARTYPE(lUnlimited) = 'L' 
+            cBody = cBody + ',"isUnlimited":' + IIF(lUnlimited, "true", "false")
+        ELSE
+            lIsUnlimited = IIF(VARTYPE(lUnlimited)='N' AND lUnlimited = 1, .T., .F.)
+            cBody = cBody + ',"isUnlimited":' + IIF(lIsUnlimited, "true", "false")
+        ENDIF
+        
+
+        cBody = cBody + '}'
+
+        WITH oHTTP
+            .open("PUT", cURL, .F.)
+            .setRequestHeader("Authorization", "Bearer " + cToken)
+            .setRequestHeader("Content-Type", "application/json")
+            .Send(cBody)
+        ENDWITH
+
+        cResponse = oHTTP.responseText
+        
+        IF oHTTP.status = 200
+        ELSE
+            IF EMPTY(cResponse)
+                 cResponse = '{"status":"error", "message":"Error en la actualización. Servidor respondió HTTP ' + TRANSFORM(oHTTP.status) + ' sin contenido."}'
+            ENDIF
+        ENDIF
+
+
+    CATCH TO oErr
+        cResponse = '{"status":"error", "message":"Error en la función UpdateUser. ' + ;
+                    '[ Error: ] ' + STR(oErr.ErrorNo) + ' | ' + ;
+                    '[ Message: ] ' + oErr.Message + '"}'
+    ENDTRY
+
+    RETURN cResponse
+ENDFUNC
+
+
+&& Consultar Usuarios
+FUNCTION ConsultarUsuarios(cBaseURL, cToken, cFiltroKey, cFiltroValue, nPage, nPerPage)
+    LOCAL cService, cURL, oHTTP, cQueryParams, cResponse, sp
+    
+    sp = CHR(13) + CHR(10)
+    cService = "/management/v2/api/dealers/users"
+    cURL = cBaseURL + cService
+    cQueryParams = ""
+    
+    IF VARTYPE(cFiltroKey) <> 'L' AND NOT EMPTY(cFiltroKey) AND NOT EMPTY(cFiltroValue)
+        cQueryParams = cQueryParams + "?" + cFiltroKey + "=" + cFiltroValue
+    ENDIF
+
+    cQueryParams = cQueryParams + IIF(EMPTY(cQueryParams), "?", "&") + "Page=" + TRANSFORM(nPage)
+
+    cQueryParams = cQueryParams + IIF(EMPTY(cQueryParams), "?", "&") + "PerPage=" + TRANSFORM(nPerPage)
+
+    cURL = cURL + cQueryParams
+    
+    * Validar que la URL sea HTTPS
+    IF NOT ValidarURL(cBaseURL)
+        RETURN '{"status":"error", "message":"Error: La URL base debe iniciar con https://"}'
+    ENDIF
+
+    TRY
+        oHTTP = CreateObject("MSXML2.ServerXMLHTTP.6.0")
+
+        WITH oHTTP
+            .open("GET", cURL, .F.)  
+            .setRequestHeader("Authorization", "Bearer " + cToken)
+            .send()
+        ENDWITH
+
+        cResponse = oHTTP.responseText
+
+        IF oHTTP.status <> 200
+             cResponse = IIF(EMPTY(cResponse), '{"status":"error", "message":"Error en la consulta. Servidor respondió HTTP ' + TRANSFORM(oHTTP.status) + ' sin contenido."}', cResponse)
+        ENDIF
+
+    CATCH TO oErr
+        cResponse = '{"status":"error", "message":"Error en la función ConsultarUsuarios. ' + ;
+                    '[ Error: ] ' + STR(oErr.ErrorNo) + ' | ' + ;
+                    '[ Message: ] ' + oErr.Message + '"}'
+    ENDTRY
+
+    RETURN cResponse
+ENDFUNC
+
+
+&& Eliminar Usuarios
+FUNCTION DeleteUser(cBaseURL, cToken, cUUID)
+    LOCAL cService, cURL, oHTTP, cResponse, sp, nStatus
+    
+    sp = CHR(13) + CHR(10)
+    
+    cService = "/management/v2/api/dealers/users/" + cUUID
+    cURL = cBaseURL + cService
+
+    * Validar que la URL sea HTTPS
+    IF NOT ValidarURL(cBaseURL)
+        RETURN '{"status":"error", "message":"Error: La URL base debe iniciar con https://"}'
+    ENDIF
+
+    TRY
+        oHTTP = CreateObject("MSXML2.ServerXMLHTTP.6.0")
+
+        WITH oHTTP
+            .open("DELETE", cURL, .F.)
+            .setRequestHeader("Authorization", "Bearer " + cToken)
+            .send()
+        ENDWITH
+
+  
+        nStatus = oHTTP.status
+        cResponse = oHTTP.responseText
+
+        * Manejo del Código 204 (No Content)
+        IF nStatus = 204
+            cResponse = '{"status":"success", "message":"Usuario ' + cUUID + ' eliminado correctamente (HTTP 204 No Content)."}'
+        ELSE
+            IF EMPTY(cResponse)
+                 cResponse = '{"status":"error", "message":"Error en la eliminación. Servidor respondió HTTP ' + TRANSFORM(nStatus) + ' sin contenido."}'
+            ENDIF
+        ENDIF
+
+    CATCH TO oErr
+        cResponse = '{"status":"error", "message":"Error en la función DeleteUser. ' + ;
+                    '[ Error: ] ' + STR(oErr.ErrorNo) + ' | ' + ;
+                    '[ Message: ] ' + oErr.Message + '"}'
+    ENDTRY
+
+    RETURN cResponse
+ENDFUNC
+
+
+
+
+
+
+
+FUNCTION ValidarURL(cURL)
+    LOCAL lEsHttps
+    lEsHttps = (UPPER(LEFT(ALLTRIM(cURL), 8)) == "HTTPS://")
+    RETURN lEsHttps
+ENDFUNC
+
+
 ************************************************************************************************
 *																							   *
 *			JSON Library																	   *
