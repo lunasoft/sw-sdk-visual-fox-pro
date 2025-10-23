@@ -133,7 +133,7 @@ messagebox(Response)
 Emisión Timbrado
 </summary>
 
-**Emisión Timbrado JSON** Realiza el sellado y timbrado de un comprobante o CFDI 4.0.
+**Emisión Timbrado** Realiza el sellado y timbrado de un comprobante o CFDI 4.0.
 
 Este método recibe los siguientes parametros:
 * XML del CFDI
